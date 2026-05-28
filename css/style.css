@@ -1,0 +1,364 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* --- VARIABEL WARNA (Default: Light Mode) --- */
+:root {
+    --primary: #000000;
+    --primary-hover: #333333;
+    --danger: #ef4444;
+    --success: #10b981;
+    
+    --bg-body: #fafafa;
+    --bg-container: #ffffff;
+    --bg-total: #f4f4f5;
+    --bg-item: #ffffff;
+    --bg-input: #ffffff;
+    
+    --text-main: #09090b;
+    --text-muted: #71717a;
+    --border-color: #e4e4e7;
+}
+
+/* --- VARIABEL WARNA (Dark Mode) --- */
+body.dark-mode {
+    --primary: #ffffff;
+    --primary-hover: #e4e4e7;
+    --danger: #ef4444;
+    --success: #10b981;
+    
+    --bg-body: #09090b;
+    --bg-container: #18181b;
+    --bg-total: #27272a;
+    --bg-item: #18181b;
+    --bg-input: #18181b;
+    
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+    --border-color: #27272a;
+}
+
+/* =========================================
+   STYLE GLOBAL & RESET
+   ========================================= */
+body { 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 2rem;
+    margin: 0;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.login-page {
+    align-items: center; 
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+}
+
+/* =========================================
+   STYLE DASHBOARD (INDEX.HTML)
+   ========================================= */
+.dashboard-container {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 2rem;
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.theme-btn {
+    background: var(--bg-container); 
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    width: 38px;
+    height: 38px;
+    border-radius: 6px; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.theme-btn:hover { background: var(--bg-total); }
+
+.total-container {
+    padding: 1.5rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.total-amount { 
+    font-size: 2.5rem; 
+    font-weight: 800; 
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+.form-card {
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+/* TYPO SUDAH DIPERBAIKI DI SINI */
+.form-group { margin-bottom: 1.2rem; }
+
+label { 
+    display: block; 
+    margin-bottom: 0.5rem; 
+    color: var(--text-main); 
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+input { 
+    width: 100%; 
+    padding: 0.6rem 0.8rem; 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px; 
+    box-sizing: border-box; 
+    font-size: 0.875rem;
+    background: var(--bg-input);
+    color: var(--text-main);
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--text-muted);
+}
+
+input::placeholder { color: var(--text-muted); }
+
+.btn-primary { 
+    width: 100%; 
+    padding: 0.75rem; 
+    background: var(--primary); 
+    color: var(--bg-body); 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-size: 0.875rem; 
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover { opacity: 0.8; }
+
+.expense-list { 
+    list-style: none; 
+    padding: 0; 
+    margin-top: 1rem;
+}
+
+.expense-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 1rem 0; 
+    border-bottom: 1px solid var(--border-color); 
+    
+    /* Animasi Dasar Staggered */
+    opacity: 0;
+    transform: translateY(20px);
+    animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- ANIMASI FLASH EFFECT --- */
+.expense-item.flash-income {
+    animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, flashGreen 2s ease-out;
+}
+
+.expense-item.flash-expense {
+    animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, flashRed 2s ease-out;
+}
+
+@keyframes staggerSlideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Flash Hijau untuk Income */
+@keyframes flashGreen {
+    0% {
+        background-color: rgba(16, 185, 129, 0.25);
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    100% {
+        background-color: transparent;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+}
+
+/* Flash Merah untuk Expense */
+@keyframes flashRed {
+    0% {
+        background-color: rgba(239, 68, 68, 0.25);
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    100% {
+        background-color: transparent;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+}
+
+.expense-item:last-child { border-bottom: none; }
+
+.expense-info strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.expense-info small { color: var(--text-muted); font-size: 0.8rem;}
+
+.expense-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.expense-price { font-weight: 600; font-size: 0.95rem; }
+
+.text-success { color: var(--success); }
+.text-danger { color: var(--text-main); } 
+
+.delete-btn { 
+    background: transparent; 
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 4px 8px; 
+    border-radius: 4px;
+    cursor: pointer; 
+    font-size: 0.8rem;
+}
+
+.delete-btn:hover { 
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.type-toggle {
+    display: flex;
+    background: var(--bg-total);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 0.5rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.type-btn.active {
+    background: var(--bg-container);
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* =========================================
+   STYLE KHUSUS HALAMAN LOGIN (HERO SECTION)
+   ========================================= */
+body.login-page .top-nav {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+}
+
+body.login-page .hero-container {
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+    padding: 2rem;
+    animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+@keyframes slideUpFade {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+body.login-page .hero-title {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 400; 
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+    margin: 0 0 1.5rem 0;
+}
+
+body.login-page .highlight-word {
+    display: inline-block;
+    font-weight: 800; 
+    color: var(--text-muted); 
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+body.login-page .hero-desc {
+    font-size: 0.875rem; 
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto 2.5rem auto;
+}
+
+body.login-page .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px; 
+    padding: 0 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-outline:hover { background: var(--bg-total); }
