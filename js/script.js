@@ -65,7 +65,7 @@ if (themeToggleBtn) {
 // =========================================
 // 4. HIDE / SHOW BALANCE
 // =========================================
-let balanceHidden = false;
+let balanceHidden = true; // default hidden
 let actualBalance = 'Rp 0';
 
 window.toggleBalance = function() {
@@ -149,7 +149,6 @@ function loadTransactions(uid) {
               list.appendChild(li);
           });
 
-          // Update balance lewat fungsi biar nyambung sama hide/show
           updateBalanceDisplay(`Rp ${total.toLocaleString('id-ID')}`);
       });
 }
