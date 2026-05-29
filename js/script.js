@@ -85,7 +85,7 @@
                 
                 const randomAttr = attributes[Math.floor(Math.random() * attributes.length)];
                 const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
-                const customNickname = `${randomAttr} ${randomAnimal}`;
+                const customNickname = `Sir ${randomAttr} ${randomAnimal}`;
 
                 // Minta sistem nunggu update nama selesai
                 return result.user.updateProfile({ displayName: customNickname });
