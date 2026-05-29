@@ -1,75 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="application-name" content="Wallet">
-<title>Wallet</title>
-<link rel="icon" type="image/png" href="img/logo.png">
-<link rel="stylesheet" href="css/style.css">
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="application-name" content="Wallet">
+    <title>Wallet</title>
+    <link rel="icon" type="image/png" href="img/logo.png">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<div class="dashboard-container">
-    <div class="header-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; color: var(--text-main);">
-                <img src="img/logo.png" alt="Wallet Logo" style="width: 24px; height: 24px; object-fit: contain;">
-                Wallet
+    <div class="dashboard-container">
+        <!-- HEADER ASLI LU (TIDAK ADA LOGO ANEH) -->
+        <div class="header-bar">
+            <div>
+                <h2 id="user-greeting" style="margin: 0; font-weight: 700; font-size: 1.5rem;">Hello!</h2>
             </div>
-            <h2 id="user-greeting" style="margin: 0; font-weight: 700; font-size: 1.5rem;">Hello!</h2>
+            <div class="header-actions">
+                <button id="theme-toggle" class="theme-btn"></button>
+                <button onclick="logout()" class="btn-outline" style="height: 38px; padding: 0 1rem; font-size: 0.8rem;">Logout</button>
+            </div>
         </div>
-        <div class="header-actions">
-            <button id="theme-toggle" class="theme-btn"></button>
-            <button onclick="logout()" class="btn-outline" style="height: 38px; padding: 0 1rem; font-size: 0.8rem;">Logout</button>
-        </div>
-    </div>
 
-    <div class="total-container">
-        <div style="color: var(--text-muted); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Total Balance</div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <div class="total-amount" id="total-balance">Rp 0</div>
-            <button id="toggle-balance" onclick="toggleBalance()" class="eye-btn" title="Sembunyikan saldo">
-                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-            </button>
+        <div class="total-container">
+            <div style="color: var(--text-muted); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Total Balance</div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="total-amount" id="total-balance">Rp ••••••</div>
+                <button class="eye-btn" onclick="toggleBalance()">
+                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                </button>
+            </div>
         </div>
-    </div>
 
-    <div class="form-card">
-        <form id="expense-form">
-            <div class="form-group">
-                <label>Transaction Type</label>
-                <div class="type-toggle">
-                    <button type="button" class="type-btn" data-type="income">Income</button>
-                    <button type="button" class="type-btn active" data-type="expense">Expense</button>
+        <div class="form-card">
+            <form id="expense-form">
+                <div class="form-group">
+                    <label>Transaction Type</label>
+                    <div class="type-toggle">
+                        <button type="button" class="type-btn" data-type="income">Income</button>
+                        <button type="button" class="type-btn active" data-type="expense">Expense</button>
+                    </div>
+                    <input type="hidden" id="type" value="expense">
                 </div>
-                <input type="hidden" id="type" value="expense">
-            </div>
-            <div class="form-group">
-                <label for="desc">Description (Optional)</label>
-                <input type="text" id="desc" placeholder="E.g., Monthly salary / Coffee">
-            </div>
-            <div class="form-group">
-                <label for="amount">Amount (Rp)</label>
-                <input type="number" id="amount" required min="1" placeholder="E.g., 50000">
-            </div>
-            <button type="submit" class="btn-primary">Add Transaction</button>
-        </form>
+                <div class="form-group">
+                    <label for="desc">Description (Optional)</label>
+                    <input type="text" id="desc" placeholder="E.g., Monthly salary / Coffee">
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount (Rp)</label>
+                    <input type="number" id="amount" required min="1" placeholder="E.g., 50000">
+                </div>
+                <button type="submit" class="btn-primary">Add Transaction</button>
+            </form>
+        </div>
+
+        <h3 style="margin-top: 2rem; font-size: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Recent Transactions</h3>
+        <ul class="expense-list" id="expense-list"></ul>
     </div>
-
-    <h3 style="margin-top: 2rem; font-size: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Recent Transactions</h3>
-    <ul class="expense-list" id="expense-list"></ul>
-</div>
-
-<script src="js/script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
