@@ -105,29 +105,52 @@ button, input, select, textarea {
     margin-bottom: 1.5rem;
 }
 
+.balance-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 4px;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 8px;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+.balance-toggle-btn:hover {
+    color: var(--text-main);
+}
+
+/* FIX 1: Balance color states */
 .total-amount { 
     font-size: 2.5rem; 
     font-weight: 800; 
     letter-spacing: -0.02em;
     color: var(--text-main);
+    transition: color 0.3s ease;
 }
 
-/* --- EYE BUTTON (Hide/Show Balance) --- */
-.eye-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-muted);
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    border-radius: 4px;
-    transition: color 0.2s ease;
-    flex-shrink: 0;
+.total-amount.balance-negative {
+    color: var(--danger);
 }
 
-.eye-btn:hover {
+.total-amount.balance-positive {
     color: var(--text-main);
+}
+
+/* FIX 2: Loading placeholder style */
+.balance-loading {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
 .form-card {
@@ -166,6 +189,7 @@ input:focus {
 
 input::placeholder { color: var(--text-muted); }
 
+/* FIX 3: Disabled state for submit button */
 .btn-primary { 
     width: 100%; 
     padding: 0.75rem; 
@@ -179,12 +203,26 @@ input::placeholder { color: var(--text-muted); }
     transition: opacity 0.2s;
 }
 
-.btn-primary:hover { opacity: 0.8; }
+.btn-primary:hover:not(:disabled) { opacity: 0.8; }
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 .expense-list { 
     list-style: none; 
     padding: 0; 
     margin-top: 1rem;
+}
+
+/* FIX 4: Empty state & loading placeholder styles */
+.empty-state,
+.loading-placeholder {
+    padding: 2rem 0;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
 }
 
 .expense-item { 
@@ -250,18 +288,21 @@ input::placeholder { color: var(--text-muted); }
     font-weight: 500;
 }
 
-.expense-info small { color: var(--text-muted); font-size: 0.8rem;}
+.expense-info small { color: var(--text-muted); font-size: 0.8rem; }
 
 .expense-actions {
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-shrink: 0;
 }
 
 .expense-price { font-weight: 600; font-size: 0.95rem; }
 
 .text-success { color: var(--success); }
-.text-danger { color: var(--text-main); } 
+
+/* FIX 5: text-danger was incorrectly set to --text-main, now uses --danger */
+.text-danger { color: var(--danger); }
 
 .delete-btn { 
     background: transparent; 
@@ -271,6 +312,7 @@ input::placeholder { color: var(--text-muted); }
     border-radius: 4px;
     cursor: pointer; 
     font-size: 0.8rem;
+    transition: color 0.2s, border-color 0.2s;
 }
 
 .delete-btn:hover { 
@@ -376,3 +418,38 @@ body.login-page .hero-actions {
 }
 
 .btn-outline:hover { background: var(--bg-total); }
+
+/* =========================================
+   RESPONSIVE (MOBILE)
+   ========================================= */
+@media (max-width: 480px) {
+    body {
+        padding: 1rem;
+    }
+
+    .dashboard-container {
+        margin-top: 1rem;
+    }
+
+    .total-amount {
+        font-size: 2rem;
+    }
+
+    .expense-info strong {
+        font-size: 0.875rem;
+    }
+
+    .expense-price {
+        font-size: 0.875rem;
+    }
+
+    body.login-page .top-nav {
+        top: 1rem;
+        right: 1rem;
+    }
+
+    body.login-page .hero-container {
+        padding: 1rem;
+        padding-top: 4rem;
+    }
+}

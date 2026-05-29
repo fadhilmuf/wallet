@@ -33,7 +33,7 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-window.logout = function() {
+window.logout = function () {
     auth.signOut().then(() => {
         window.location.href = '/login';
     });
@@ -63,39 +63,7 @@ if (themeToggleBtn) {
 }
 
 // =========================================
-// 4. HIDE / SHOW BALANCE
-// =========================================
-let balanceHidden = false;
-let actualBalance = 'Rp 0';
-
-window.toggleBalance = function() {
-    balanceHidden = !balanceHidden;
-
-    const balanceEl = document.getElementById('total-balance');
-    const eyeIcon = document.getElementById('eye-icon');
-    const eyeOffIcon = document.getElementById('eye-off-icon');
-
-    if (balanceHidden) {
-        balanceEl.textContent = 'Rp ••••••';
-        eyeIcon.style.display = 'none';
-        eyeOffIcon.style.display = 'block';
-    } else {
-        balanceEl.textContent = actualBalance;
-        eyeIcon.style.display = 'block';
-        eyeOffIcon.style.display = 'none';
-    }
-};
-
-function updateBalanceDisplay(formatted) {
-    actualBalance = formatted;
-    const balanceEl = document.getElementById('total-balance');
-    if (balanceEl && !balanceHidden) {
-        balanceEl.innerText = actualBalance;
-    }
-}
-
-// =========================================
-// 5. SISTEM TRACKER KEUANGAN (DASHBOARD)
+// 4. SISTEM TRACKER KEUANGAN (DASHBOARD)
 // =========================================
 const typeBtns = document.querySelectorAll('.type-btn');
 const typeInput = document.getElementById('type');
@@ -110,50 +78,119 @@ if (typeBtns && typeInput) {
     });
 }
 
+// =========================================
+// 5. HIDE / SHOW BALANCE TOGGLE
+// =========================================
+const eyeOpenIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const eyeClosedIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+let isBalanceHidden = localStorage.getItem('balanceHidden') === 'false';
+let lastKnownBalance = 0;
+
+const balanceToggleBtn = document.getElementById('balance-toggle');
+
+function applyBalanceVisibility() {
+    const balanceEl = document.getElementById('total-balance');
+    if (!balanceEl || !balanceToggleBtn) return;
+    if (isBalanceHidden) {
+        balanceEl.innerText = 'Rp ••••••';
+        balanceToggleBtn.innerHTML = eyeClosedIcon;
+    } else {
+        balanceEl.innerText = `Rp ${lastKnownBalance.toLocaleString('id-ID')}`;
+        balanceToggleBtn.innerHTML = eyeOpenIcon;
+    }
+}
+
+if (balanceToggleBtn) {
+    balanceToggleBtn.innerHTML = isBalanceHidden ? eyeClosedIcon : eyeOpenIcon;
+    balanceToggleBtn.addEventListener('click', () => {
+        isBalanceHidden = !isBalanceHidden;
+        localStorage.setItem('balanceHidden', isBalanceHidden);
+        applyBalanceVisibility();
+    });
+}
+
+// --- FIX 1: Loading state saat data belum masuk ---
+function setBalanceLoading(isLoading) {
+    const balanceEl = document.getElementById('total-balance');
+    if (!balanceEl) return;
+    if (isLoading) {
+        balanceEl.innerHTML = `<span class="balance-loading">Loading...</span>`;
+    }
+}
+
 function loadTransactions(uid) {
     const list = document.getElementById('expense-list');
     if (!list) return;
 
+    // Tampilkan loading state dulu
+    setBalanceLoading(true);
+    list.innerHTML = `<li class="loading-placeholder">Loading transactions...</li>`;
+
     db.collection('users').doc(uid).collection('transactions')
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-          list.innerHTML = '';
-          let total = 0;
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+            list.innerHTML = '';
+            let total = 0;
 
-          snapshot.forEach(doc => {
-              const data = doc.data();
-              const amount = Number(data.amount);
+            if (snapshot.empty) {
+                list.innerHTML = `<li class="empty-state">No transactions yet. Add your first one!</li>`;
+            }
 
-              if (data.type === 'income') total += amount;
-              else total -= amount;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const amount = Number(data.amount);
 
-              let dateStr = '';
-              if (data.createdAt) {
-                  dateStr = data.createdAt.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-              }
+                if (data.type === 'income') total += amount;
+                else total -= amount;
 
-              const li = document.createElement('li');
-              li.className = `expense-item flash-${data.type}`;
-              li.innerHTML = `
-                  <div class="expense-info">
-                      <strong>${data.desc || (data.type === 'income' ? 'Income' : 'Expense')}</strong>
-                      <small>${dateStr}</small>
-                  </div>
-                  <div class="expense-actions">
-                      <span class="expense-price ${data.type === 'income' ? 'text-success' : 'text-danger'}">
-                          ${data.type === 'income' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}
-                      </span>
-                      <button class="delete-btn" onclick="deleteTx('${doc.id}')">✕</button>
-                  </div>
-              `;
-              list.appendChild(li);
-          });
+                let dateStr = '';
+                if (data.createdAt) {
+                    dateStr = data.createdAt.toDate().toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                    });
+                }
 
-          // Update balance lewat fungsi biar nyambung sama hide/show
-          updateBalanceDisplay(`Rp ${total.toLocaleString('id-ID')}`);
-      });
+                const li = document.createElement('li');
+                li.className = `expense-item flash-${data.type}`;
+                li.innerHTML = `
+                    <div class="expense-info">
+                        <strong>${data.desc || (data.type === 'income' ? 'Income' : 'Expense')}</strong>
+                        <small>${dateStr}</small>
+                    </div>
+                    <div class="expense-actions">
+                        <span class="expense-price ${data.type === 'income' ? 'text-success' : 'text-danger'}">
+                            ${data.type === 'income' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}
+                        </span>
+                        <button class="delete-btn" data-id="${doc.id}" title="Delete transaction">✕</button>
+                    </div>
+                `;
+
+                // --- FIX 2: Pindahin event listener ke elemen, bukan inline onclick ---
+                li.querySelector('.delete-btn').addEventListener('click', () => {
+                    deleteTx(doc.id);
+                });
+
+                list.appendChild(li);
+            });
+
+            // Update total balance
+            const balanceEl = document.getElementById('total-balance');
+            if (balanceEl) {
+                lastKnownBalance = total;
+                balanceEl.classList.toggle('balance-negative', total < 0);
+                balanceEl.classList.toggle('balance-positive', total > 0);
+                balanceEl.classList.remove('balance-loading');
+                applyBalanceVisibility();
+            }
+        }, err => {
+            // --- FIX 4: Error handler untuk onSnapshot ---
+            console.error("Firestore error:", err);
+            list.innerHTML = `<li class="empty-state">Failed to load transactions. Please refresh.</li>`;
+        });
 }
 
+// Logika Input Data Baru
 const expenseForm = document.getElementById('expense-form');
 if (expenseForm) {
     expenseForm.addEventListener('submit', (e) => {
@@ -161,9 +198,14 @@ if (expenseForm) {
         const user = auth.currentUser;
         if (!user) return;
 
+        const submitBtn = expenseForm.querySelector('button[type="submit"]');
         const type = document.getElementById('type').value;
-        const desc = document.getElementById('desc').value;
+        const desc = document.getElementById('desc').value.trim();
         const amount = document.getElementById('amount').value;
+
+        // --- FIX 5: Disable tombol saat submit biar ga double-submit ---
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
 
         db.collection('users').doc(user.uid).collection('transactions').add({
             type: type,
@@ -175,14 +217,22 @@ if (expenseForm) {
             typeBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-type="expense"]').classList.add('active');
             typeInput.value = 'expense';
-        }).catch(err => alert("Gagal menambah data: " + err.message));
+        }).catch(err => {
+            alert("Gagal menambah data: " + err.message);
+        }).finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add Transaction';
+        });
     });
 }
 
-window.deleteTx = function(id) {
+// --- FIX 6: Konfirmasi sebelum hapus ---
+function deleteTx(id) {
     const user = auth.currentUser;
-    if (user) {
-        db.collection('users').doc(user.uid).collection('transactions').doc(id).delete()
-          .catch(err => alert("Gagal menghapus: " + err.message));
-    }
-};
+    if (!user) return;
+
+    if (!confirm('Delete this transaction?')) return;
+
+    db.collection('users').doc(user.uid).collection('transactions').doc(id).delete()
+        .catch(err => alert("Gagal menghapus: " + err.message));
+}
