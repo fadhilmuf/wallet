@@ -23,20 +23,16 @@ const db = firebase.firestore();
 // =========================================
 auth.onAuthStateChanged(user => {
     if (!user) {
-        // Kalau belum login, tendang ke halaman login
         window.location.href = '/login';
     } else {
-        // Kalau udah login, tampilin nama
         const greeting = document.getElementById('user-greeting');
         if (greeting) {
             greeting.innerText = `Hello, ${user.displayName || 'User'}!`;
         }
-        // Load data keuangan user tersebut
         loadTransactions(user.uid);
     }
 });
 
-// Fungsi Logout (Dipanggil sama tombol di index.html)
 window.logout = function() {
     auth.signOut().then(() => {
         window.location.href = '/login';
@@ -44,7 +40,7 @@ window.logout = function() {
 };
 
 // =========================================
-// 3. TEMA DARK MODE (Untuk Dashboard)
+// 3. TEMA DARK MODE
 // =========================================
 const themeToggleBtn = document.getElementById('theme-toggle');
 const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg>`;
@@ -67,12 +63,43 @@ if (themeToggleBtn) {
 }
 
 // =========================================
-// 4. SISTEM TRACKER KEUANGAN (DASHBOARD)
+// 4. HIDE / SHOW BALANCE
+// =========================================
+let balanceHidden = false;
+let actualBalance = 'Rp 0';
+
+window.toggleBalance = function() {
+    balanceHidden = !balanceHidden;
+
+    const balanceEl = document.getElementById('total-balance');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+
+    if (balanceHidden) {
+        balanceEl.textContent = 'Rp ••••••';
+        eyeIcon.style.display = 'none';
+        eyeOffIcon.style.display = 'block';
+    } else {
+        balanceEl.textContent = actualBalance;
+        eyeIcon.style.display = 'block';
+        eyeOffIcon.style.display = 'none';
+    }
+};
+
+function updateBalanceDisplay(formatted) {
+    actualBalance = formatted;
+    const balanceEl = document.getElementById('total-balance');
+    if (balanceEl && !balanceHidden) {
+        balanceEl.innerText = actualBalance;
+    }
+}
+
+// =========================================
+// 5. SISTEM TRACKER KEUANGAN (DASHBOARD)
 // =========================================
 const typeBtns = document.querySelectorAll('.type-btn');
 const typeInput = document.getElementById('type');
 
-// Logika buat tombol ubah Income/Expense
 if (typeBtns && typeInput) {
     typeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -83,7 +110,6 @@ if (typeBtns && typeInput) {
     });
 }
 
-// Logika buat Nampilin Data ke layar
 function loadTransactions(uid) {
     const list = document.getElementById('expense-list');
     if (!list) return;
@@ -97,11 +123,10 @@ function loadTransactions(uid) {
           snapshot.forEach(doc => {
               const data = doc.data();
               const amount = Number(data.amount);
-              
+
               if (data.type === 'income') total += amount;
               else total -= amount;
 
-              // Format tanggal
               let dateStr = '';
               if (data.createdAt) {
                   dateStr = data.createdAt.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -124,13 +149,11 @@ function loadTransactions(uid) {
               list.appendChild(li);
           });
 
-          // Update total saldo
-          const balanceEl = document.getElementById('total-balance');
-          if (balanceEl) balanceEl.innerText = `Rp ${total.toLocaleString('id-ID')}`;
+          // Update balance lewat fungsi biar nyambung sama hide/show
+          updateBalanceDisplay(`Rp ${total.toLocaleString('id-ID')}`);
       });
 }
 
-// Logika Input Data Baru
 const expenseForm = document.getElementById('expense-form');
 if (expenseForm) {
     expenseForm.addEventListener('submit', (e) => {
@@ -149,7 +172,6 @@ if (expenseForm) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             expenseForm.reset();
-            // Kembalikan tombol ke default (Expense)
             typeBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-type="expense"]').classList.add('active');
             typeInput.value = 'expense';
@@ -157,7 +179,6 @@ if (expenseForm) {
     });
 }
 
-// Logika Hapus Data
 window.deleteTx = function(id) {
     const user = auth.currentUser;
     if (user) {

@@ -112,6 +112,24 @@ button, input, select, textarea {
     color: var(--text-main);
 }
 
+/* --- EYE BUTTON (Hide/Show Balance) --- */
+.eye-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.eye-btn:hover {
+    color: var(--text-main);
+}
+
 .form-card {
     background: var(--bg-container);
     border: 1px solid var(--border-color);
@@ -119,7 +137,6 @@ button, input, select, textarea {
     border-radius: 12px;
 }
 
-/* TYPO SUDAH DIPERBAIKI DI SINI */
 .form-group { margin-bottom: 1.2rem; }
 
 label { 
@@ -177,7 +194,6 @@ input::placeholder { color: var(--text-muted); }
     padding: 1rem 0; 
     border-bottom: 1px solid var(--border-color); 
     
-    /* Animasi Dasar Staggered */
     opacity: 0;
     transform: translateY(20px);
     animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -199,7 +215,6 @@ input::placeholder { color: var(--text-muted); }
     }
 }
 
-/* Flash Hijau untuk Income */
 @keyframes flashGreen {
     0% {
         background-color: rgba(16, 185, 129, 0.25);
@@ -213,7 +228,6 @@ input::placeholder { color: var(--text-muted); }
     }
 }
 
-/* Flash Merah untuk Expense */
 @keyframes flashRed {
     0% {
         background-color: rgba(239, 68, 68, 0.25);
