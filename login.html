@@ -12,12 +12,8 @@
 </head>
 <body class="login-page">
 
-    <div class="top-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 20px; box-sizing: border-box;">
-        <div style="font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
-            <img src="img/logo.png" alt="Wallet Logo" style="width: 32px; height: 32px; object-fit: contain;">
-            Wallet
-        </div>
-        <button id="theme-toggle" class="theme-btn"></button>
+    <div class="top-nav" style="display: flex; width: 100%; padding: 20px; box-sizing: border-box;">
+        Wallet
     </div>
 
     <div class="hero-container">
@@ -42,89 +38,12 @@
     </div>
 
     <script>
-        // CONFIG FIREBASE (Domain Bener)
+        // CONFIG FIREBASE
         const firebaseConfig = {
-            apiKey: "AIzaSyCfEM_BCzUpBHtzx2LPvGDXiZ44g-NTyLY",
-            authDomain: "wallet.randomhub.online",
-            projectId: "wallet-4da85",
-            storageBucket: "wallet-4da85.firebasestorage.app",
-            messagingSenderId: "824717163561",
-            appId: "1:824717163561:web:f6ea7c049a4d5a5c677038",
-            measurementId: "G-N8GZPJ1RVM"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-
-        // --- UI & TEMA ---
-        const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejo[...]
-        const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoi[...]
-
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const currentTheme = localStorage.getItem('theme');
-
-        themeToggleBtn.innerHTML = moonIcon;
-        if (currentTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeToggleBtn.innerHTML = sunIcon;
+            apiKey: "AIza...",
+            authDomain: "wallet...",
+            ...more...
         }
-
-        themeToggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggleBtn.innerHTML = isDark ? sunIcon : moonIcon;
-        });
-
-        // --- ANIMASI TEKS ---
-        const words = ["effortlessly.", "securely.", "smartly.", "easily."];
-        let wordIndex = 0;
-        const changingWord = document.getElementById('changing-word');
-        setInterval(() => {
-            changingWord.style.opacity = 0;
-            changingWord.style.transform = "translateY(10px)";
-            setTimeout(() => {
-                wordIndex = (wordIndex + 1) % words.length;
-                changingWord.innerText = words[wordIndex];
-                changingWord.style.opacity = 1;
-                changingWord.style.transform = "translateY(0)";
-            }, 400); 
-        }, 3000);
-
-        // --- SISTEM LOGIN (ANTI-BALAPAN & TANPA GUEST) ---
-        let isLoginAction = false; 
-
-        firebase.auth().onAuthStateChanged(user => {
-            if (user && !isLoginAction) window.location.href = '/';
-        });
-
-        document.getElementById('google-login-btn').addEventListener('click', () => {
-            isLoginAction = true; 
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then(() => {
-                window.location.href = '/'; 
-            }).catch(error => {
-                isLoginAction = false; 
-                alert(error.message);
-            });
-        });
-
-        document.getElementById('guest-login-btn').addEventListener('click', () => {
-            isLoginAction = true; 
-            firebase.auth().signInAnonymously().then(result => {
-                const animals = ["Capybara", "Otter", "Panda", "Koala", "Hamster", "Fox", "Sloth", "Badger"];
-                const attributes = ["Strategic", "Dynamic", "Chill", "Clever", "Swift", "Silent"];
-                
-                const customNickname = `${attributes[Math.floor(Math.random() * attributes.length)]} ${animals[Math.floor(Math.random() * animals.length)]}`;
-                
-                // Return buat nahan proses pindah halaman
-                return result.user.updateProfile({ displayName: customNickname });
-            }).then(() => {
-                window.location.href = '/'; 
-            }).catch(error => {
-                isLoginAction = false;
-                alert(error.message);
-            });
-        });
     </script>
 </body>
 </html>
