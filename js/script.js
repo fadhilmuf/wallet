@@ -75,7 +75,7 @@ const formatCurrency = (amount) => {
 // --- AUTH STATE MONITOR ---
 auth.onAuthStateChanged(user => {
     if (!user) {
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     } else {
         document.getElementById('user-greeting').innerText = `Hello, ${user.displayName || user.email || 'User'}!`;
         listenToUserTransactions(user.uid);
@@ -85,7 +85,7 @@ auth.onAuthStateChanged(user => {
 window.logout = function() {
     if (unsubscribeStore) unsubscribeStore(); 
     auth.signOut().then(() => {
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     });
 };
 
