@@ -3,7 +3,7 @@
 // =========================================
 const firebaseConfig = {
     apiKey: "AIzaSyCfEM_BCzUpBHtzx2LPvGDXiZ44g-NTyLY",
-    authDomain: "wallet-4da85.firebaseapp.com",
+    authDomain: "wallet.randomhub.online",
     projectId: "wallet-4da85",
     storageBucket: "wallet-4da85.firebasestorage.app",
     messagingSenderId: "824717163561",
