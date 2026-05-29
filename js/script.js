@@ -93,7 +93,7 @@ document.getElementById('google-login-btn').addEventListener('click', () => {
 
 // Tombol Continue as Guest
 document.getElementById('guest-login-btn').addEventListener('click', () => {
-    isLoginAction = true; // Aktifin rem
+    isLoginAction = true; 
     
     firebase.auth().signInAnonymously().then(result => {
         const animals = ["Capybara", "Otter", "Panda", "Koala", "Hamster", "Fox", "Sloth", "Badger"];
@@ -102,18 +102,17 @@ document.getElementById('guest-login-btn').addEventListener('click', () => {
         const randomAttr = attributes[Math.floor(Math.random() * attributes.length)];
         const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
         
-        // Cuma generate atribut + nama hewan (tanpa kata Guest)
         const customNickname = `${randomAttr} ${randomAnimal}`;
 
-        // Return di sini PENTING BANGET biar perintah .then() di bawah nunggu ini kelar dulu
+        // INI REMNYA: Tunggu proses update nama 100% selesai
         return result.user.updateProfile({ displayName: customNickname });
         
     }).then(() => {
-        // Pindah halaman cuma tereksekusi kalau update nama sukses 100%
+        // BARU PINDAH HALAMAN DI SINI
         window.location.href = '/'; 
         
     }).catch(error => {
-        isLoginAction = false; // Lepas rem kalau error
+        isLoginAction = false;
         console.error("Guest Login Error:", error);
         alert(error.message);
     });
