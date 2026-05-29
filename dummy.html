@@ -71,7 +71,6 @@
             if (balanceEl) balanceEl.innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
         }
 
-        // AMBIL DATA CASH DARI DATABASE UTAMA (Hanya baca totalnya)
         function loadCashData(uid) {
             db.collection('users').doc(uid).collection('transactions')
               .onSnapshot(snapshot => {
@@ -85,7 +84,6 @@
               });
         }
 
-        // AMBIL DAFTAR SAHAM
         function loadPortfolio(uid) {
             db.collection('users').doc(uid).collection('portfolio')
               .orderBy('createdAt', 'asc')
@@ -98,13 +96,16 @@
               });
         }
 
-        // CARI HARGA KE YAHOO FINANCE
+        // CARI HARGA KE YAHOO FINANCE (STRATEGI 2 LAPIS PROXY)
         async function fetchStockPrices() {
             const list = document.getElementById('portfolio-list');
             const syncStatus = document.getElementById('stock-sync-status');
             if (!list) return;
             
-            if(syncStatus) syncStatus.innerText = 'Syncing...';
+            if(syncStatus) {
+                syncStatus.innerText = 'Syncing...';
+                syncStatus.style.color = 'var(--text-muted)';
+            }
             list.innerHTML = '';
             currentStockTotal = 0;
 
@@ -118,15 +119,26 @@
 
                 try {
                     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.JK`;
-                    // Proxy diganti ke corsproxy.io yang lebih kebal limit
-                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                    let parsed = null;
                     
-                    const res = await fetch(proxyUrl);
-                    
-                    // Cek kalau proxy nolak
-                    if (!res.ok) throw new Error("Gagal nembus proxy");
-                    
-                    const parsed = await res.json();
+                    // Lapis 1: Pakai API CodeTabs (Paling sering tembus)
+                    try {
+                        let res1 = await fetch(`https://api.codetabs.com/v1/proxy?quest=${url}`);
+                        if(res1.ok) parsed = await res1.json();
+                    } catch(e1) {
+                        console.log("CodeTabs gagal, pindah jalur...");
+                    }
+
+                    // Lapis 2: Kalau Lapis 1 jebol, otomatis coba AllOrigins Raw
+                    if (!parsed) {
+                        let res2 = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+                        if(res2.ok) parsed = await res2.json();
+                    }
+
+                    // Validasi kalau dua-duanya tetep diblokir Yahoo
+                    if (!parsed || !parsed.chart || !parsed.chart.result) {
+                        throw new Error("Dua proxy diblokir Yahoo");
+                    }
                     
                     price = parsed.chart.result[0].meta.regularMarketPrice;
                     totalValue = price * shares;
@@ -162,7 +174,6 @@
             updateGrandTotal();
         }
 
-        // TAMBAH SAHAM BARU
         const stockForm = document.getElementById('stock-form');
         if (stockForm) {
             stockForm.addEventListener('submit', (e) => {
@@ -183,7 +194,6 @@
             });
         }
 
-        // HAPUS SAHAM
         window.deleteStock = function(id) {
             const user = auth.currentUser;
             if (user) {
@@ -191,7 +201,6 @@
             }
         };
 
-        // OTENTIKASI & JALANKAN AWAL
         auth.onAuthStateChanged(user => {
             if (!user) {
                 window.location.href = '/login';
