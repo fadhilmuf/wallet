@@ -19,32 +19,17 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // =========================================
-// 2. OTENTIKASI & LOGOUT
+// 2. ICONS
 // =========================================
-auth.onAuthStateChanged(user => {
-    if (!user) {
-        window.location.href = '/login';
-    } else {
-        const greeting = document.getElementById('user-greeting');
-        if (greeting) {
-            greeting.innerText = `Hello, ${user.displayName || 'User'}!`;
-        }
-        loadTransactions(user.uid);
-    }
-});
-
-window.logout = function () {
-    auth.signOut().then(() => {
-        window.location.href = '/login';
-    });
-};
+const moonIcon     = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg>`;
+const sunIcon      = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+const eyeOpenIcon  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const eyeClosedIcon= `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
 
 // =========================================
-// 3. TEMA DARK MODE
+// 3. TEMA DARK MODE (pakai localStorage, ini oke karena bukan data user)
 // =========================================
 const themeToggleBtn = document.getElementById('theme-toggle');
-const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg>`;
-const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
 
 if (themeToggleBtn) {
     const currentTheme = localStorage.getItem('theme');
@@ -53,7 +38,6 @@ if (themeToggleBtn) {
         document.body.classList.add('dark-mode');
         themeToggleBtn.innerHTML = sunIcon;
     }
-
     themeToggleBtn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
@@ -63,7 +47,7 @@ if (themeToggleBtn) {
 }
 
 // =========================================
-// 4. SISTEM TRACKER KEUANGAN (DASHBOARD)
+// 4. INCOME/EXPENSE TOGGLE
 // =========================================
 const typeBtns = document.querySelectorAll('.type-btn');
 const typeInput = document.getElementById('type');
@@ -79,18 +63,16 @@ if (typeBtns && typeInput) {
 }
 
 // =========================================
-// 5. HIDE / SHOW BALANCE TOGGLE
+// 5. HIDE / SHOW BALANCE — state di Firestore
 // =========================================
-const eyeOpenIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-const eyeClosedIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-
-let isBalanceHidden = localStorage.getItem('balanceHidden') === 'false';
+let isBalanceHidden = true; // default selalu hidden sebelum Firestore di-load
 let lastKnownBalance = 0;
 
 const balanceToggleBtn = document.getElementById('balance-toggle');
+const balanceEl = document.getElementById('total-balance');
 
+// Render tampilan balance sesuai state saat ini
 function applyBalanceVisibility() {
-    const balanceEl = document.getElementById('total-balance');
     if (!balanceEl || !balanceToggleBtn) return;
     if (isBalanceHidden) {
         balanceEl.innerText = 'Rp ••••••';
@@ -101,30 +83,69 @@ function applyBalanceVisibility() {
     }
 }
 
+// Langsung apply hidden sebelum apapun — biar Rp 0 di HTML ga sempat keliatan
+applyBalanceVisibility();
+
+// Simpan preference ke Firestore
+function saveBalancePreference(uid, hidden) {
+    db.collection('users').doc(uid).set(
+        { balanceHidden: hidden },
+        { merge: true }
+    ).catch(err => console.error('Gagal simpan preference:', err));
+}
+
 if (balanceToggleBtn) {
-    balanceToggleBtn.innerHTML = isBalanceHidden ? eyeClosedIcon : eyeOpenIcon;
     balanceToggleBtn.addEventListener('click', () => {
+        const user = auth.currentUser;
         isBalanceHidden = !isBalanceHidden;
-        localStorage.setItem('balanceHidden', isBalanceHidden);
         applyBalanceVisibility();
+        if (user) saveBalancePreference(user.uid, isBalanceHidden);
     });
 }
 
-// --- FIX 1: Loading state saat data belum masuk ---
-function setBalanceLoading(isLoading) {
-    const balanceEl = document.getElementById('total-balance');
-    if (!balanceEl) return;
-    if (isLoading) {
-        balanceEl.innerHTML = `<span class="balance-loading">Loading...</span>`;
+// =========================================
+// 6. OTENTIKASI & INIT
+// =========================================
+auth.onAuthStateChanged(user => {
+    if (!user) {
+        window.location.href = '/login';
+        return;
     }
-}
 
+    // Tampilkan nama user
+    const greeting = document.getElementById('user-greeting');
+    if (greeting) {
+        greeting.innerText = `Hello, ${user.displayName || 'User'}!`;
+    }
+
+    // Load preference hide/show dari Firestore dulu, baru load transaksi
+    db.collection('users').doc(user.uid).get().then(doc => {
+        if (doc.exists && typeof doc.data().balanceHidden !== 'undefined') {
+            isBalanceHidden = doc.data().balanceHidden;
+        }
+        // Kalau field belum ada (user baru), default tetap true (hidden)
+        applyBalanceVisibility();
+        loadTransactions(user.uid);
+    }).catch(() => {
+        // Kalau gagal ambil preference, tetap load transaksi dengan default hidden
+        loadTransactions(user.uid);
+    });
+});
+
+window.logout = function () {
+    auth.signOut().then(() => {
+        window.location.href = '/login';
+    });
+};
+
+// =========================================
+// 7. LOAD TRANSAKSI
+// =========================================
 function loadTransactions(uid) {
     const list = document.getElementById('expense-list');
     if (!list) return;
 
-    // Tampilkan loading state dulu
-    setBalanceLoading(true);
+    // Loading placeholder untuk list (bukan balance — balance tetap ••••••)
     list.innerHTML = `<li class="loading-placeholder">Loading transactions...</li>`;
 
     db.collection('users').doc(uid).collection('transactions')
@@ -166,7 +187,6 @@ function loadTransactions(uid) {
                     </div>
                 `;
 
-                // --- FIX 2: Pindahin event listener ke elemen, bukan inline onclick ---
                 li.querySelector('.delete-btn').addEventListener('click', () => {
                     deleteTx(doc.id);
                 });
@@ -174,23 +194,23 @@ function loadTransactions(uid) {
                 list.appendChild(li);
             });
 
-            // Update total balance
-            const balanceEl = document.getElementById('total-balance');
+            // Update balance tanpa ganggu visibility state
+            lastKnownBalance = total;
             if (balanceEl) {
-                lastKnownBalance = total;
                 balanceEl.classList.toggle('balance-negative', total < 0);
                 balanceEl.classList.toggle('balance-positive', total > 0);
-                balanceEl.classList.remove('balance-loading');
-                applyBalanceVisibility();
             }
+            applyBalanceVisibility();
+
         }, err => {
-            // --- FIX 4: Error handler untuk onSnapshot ---
             console.error("Firestore error:", err);
             list.innerHTML = `<li class="empty-state">Failed to load transactions. Please refresh.</li>`;
         });
 }
 
-// Logika Input Data Baru
+// =========================================
+// 8. TAMBAH TRANSAKSI
+// =========================================
 const expenseForm = document.getElementById('expense-form');
 if (expenseForm) {
     expenseForm.addEventListener('submit', (e) => {
@@ -203,13 +223,12 @@ if (expenseForm) {
         const desc = document.getElementById('desc').value.trim();
         const amount = document.getElementById('amount').value;
 
-        // --- FIX 5: Disable tombol saat submit biar ga double-submit ---
         submitBtn.disabled = true;
         submitBtn.textContent = 'Adding...';
 
         db.collection('users').doc(user.uid).collection('transactions').add({
-            type: type,
-            desc: desc,
+            type,
+            desc,
             amount: Number(amount),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
@@ -226,11 +245,12 @@ if (expenseForm) {
     });
 }
 
-// --- FIX 6: Konfirmasi sebelum hapus ---
+// =========================================
+// 9. HAPUS TRANSAKSI
+// =========================================
 function deleteTx(id) {
     const user = auth.currentUser;
     if (!user) return;
-
     if (!confirm('Delete this transaction?')) return;
 
     db.collection('users').doc(user.uid).collection('transactions').doc(id).delete()
