@@ -207,10 +207,32 @@ input::placeholder { color: var(--text-muted); }
     cursor: not-allowed;
 }
 
+/* --- SCROLLABLE EXPENSE LIST (UPDATE) --- */
 .expense-list { 
     list-style: none; 
     padding: 0; 
     margin-top: 1rem;
+    
+    /* Batas tinggi dan fungsi scroll */
+    max-height: 350px; 
+    overflow-y: auto;  
+    padding-right: 5px; 
+    
+    /* Styling scrollbar untuk Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+/* Custom Scrollbar untuk Chrome/Safari/Edge */
+.expense-list::-webkit-scrollbar {
+    width: 6px;
+}
+.expense-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.expense-list::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
 }
 
 .empty-state,
