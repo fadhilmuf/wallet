@@ -139,18 +139,6 @@ button, input, select, textarea {
     color: var(--text-main);
 }
 
-.balance-loading {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
 .form-card {
     background: var(--bg-container);
     border: 1px solid var(--border-color);
@@ -207,135 +195,6 @@ input::placeholder { color: var(--text-muted); }
     cursor: not-allowed;
 }
 
-/* --- SCROLLABLE EXPENSE LIST (UPDATE) --- */
-.expense-list { 
-    list-style: none; 
-    padding: 0; 
-    margin-top: 1rem;
-    
-    /* Batas tinggi dan fungsi scroll */
-    max-height: 350px; 
-    overflow-y: auto;  
-    padding-right: 5px; 
-    
-    /* Styling scrollbar untuk Firefox */
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-}
-
-/* Custom Scrollbar untuk Chrome/Safari/Edge */
-.expense-list::-webkit-scrollbar {
-    width: 6px;
-}
-.expense-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-.expense-list::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
-    border-radius: 10px;
-}
-
-.empty-state,
-.loading-placeholder {
-    padding: 2rem 0;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-}
-
-.expense-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    padding: 1rem 0; 
-    border-bottom: 1px solid var(--border-color); 
-    
-    opacity: 0;
-    transform: translateY(20px);
-    animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* --- ANIMASI FLASH EFFECT --- */
-.expense-item.flash-income {
-    animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, flashGreen 2s ease-out;
-}
-
-.expense-item.flash-expense {
-    animation: staggerSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, flashRed 2s ease-out;
-}
-
-@keyframes staggerSlideUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes flashGreen {
-    0% {
-        background-color: rgba(16, 185, 129, 0.25);
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-    100% {
-        background-color: transparent;
-        padding-left: 0px;
-        padding-right: 0px;
-    }
-}
-
-@keyframes flashRed {
-    0% {
-        background-color: rgba(239, 68, 68, 0.25);
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-    100% {
-        background-color: transparent;
-        padding-left: 0px;
-        padding-right: 0px;
-    }
-}
-
-.expense-item:last-child { border-bottom: none; }
-
-.expense-info strong {
-    display: block;
-    color: var(--text-main);
-    font-size: 0.95rem;
-    font-weight: 500;
-}
-
-.expense-info small { color: var(--text-muted); font-size: 0.8rem; }
-
-.expense-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-shrink: 0;
-}
-
-.expense-price { font-weight: 600; font-size: 0.95rem; }
-
-.text-success { color: var(--success); }
-.text-danger { color: var(--danger); }
-
-.delete-btn { 
-    background: transparent; 
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
-    padding: 4px 8px; 
-    border-radius: 4px;
-    cursor: pointer; 
-    font-size: 0.8rem;
-    transition: color 0.2s, border-color 0.2s;
-}
-
-.delete-btn:hover { 
-    color: var(--danger);
-    border-color: var(--danger);
-}
-
 .type-toggle {
     display: flex;
     background: var(--bg-total);
@@ -363,7 +222,124 @@ input::placeholder { color: var(--text-muted); }
 }
 
 /* =========================================
-   STYLE KHUSUS HALAMAN LOGIN (HERO SECTION)
+   SCROLLABLE EXPENSE LIST (KARTU HORIZONTAL)
+   ========================================= */
+.expense-list { 
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    list-style: none; 
+    padding: 0.5rem 0 1rem 0; 
+    margin-top: 1rem;
+    cursor: grab;
+    scroll-snap-type: x mandatory;
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+}
+
+.expense-list:active {
+    cursor: grabbing;
+}
+
+.expense-list::-webkit-scrollbar {
+    display: none; 
+}
+
+.empty-state,
+.loading-placeholder {
+    padding: 2rem 0;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    width: 100%;
+}
+
+.expense-item { 
+    flex: 0 0 240px; 
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex; 
+    flex-direction: column;
+    justify-content: space-between; 
+    scroll-snap-align: start;
+    user-select: none;
+    
+    /* FIX SMOOTHNESS: Kartu biasa (lama) langsung tampil tanpa animasi */
+    opacity: 1;
+    transform: none;
+}
+
+/* Animasi HANYA untuk kartu yang baru disubmit */
+.expense-item.flash-income {
+    animation: newCardIncome 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.expense-item.flash-expense {
+    animation: newCardExpense 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes newCardIncome {
+    0% { transform: translateX(20px); background-color: rgba(16, 185, 129, 0.25); border-color: var(--success); }
+    15% { transform: translateX(0); }
+    100% { background-color: var(--bg-container); border-color: var(--border-color); }
+}
+
+@keyframes newCardExpense {
+    0% { transform: translateX(20px); background-color: rgba(239, 68, 68, 0.25); border-color: var(--danger); }
+    15% { transform: translateX(0); }
+    100% { background-color: var(--bg-container); border-color: var(--border-color); }
+}
+
+.expense-info {
+    margin-bottom: 1rem;
+}
+
+.expense-info strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.expense-info small { color: var(--text-muted); font-size: 0.8rem; }
+
+.expense-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.expense-price { font-weight: 700; font-size: 0.95rem; }
+
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+
+.delete-btn { 
+    background: transparent; 
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 4px 8px; 
+    border-radius: 4px;
+    cursor: pointer; 
+    font-size: 0.8rem;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.delete-btn:hover { 
+    color: var(--danger);
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* =========================================
+   STYLE KHUSUS HALAMAN LOGIN
    ========================================= */
 body.login-page .top-nav {
     position: absolute;
@@ -449,7 +425,7 @@ body.login-page .hero-actions {
 }
 
 /* =========================================
-   SWIPE CAROUSEL & CHART STYLES (NEW)
+   SWIPE CAROUSEL CHART
    ========================================= */
 .carousel-wrapper {
     display: flex;
@@ -471,6 +447,11 @@ body.login-page .hero-actions {
 }
 .carousel-item {
     flex: 0 0 100%;
+    
+    /* FIX CHART MOBILE: Paksa dimensinya biar ga penyok */
+    width: 100%;
+    min-width: 100%;
+    
     scroll-snap-align: start;
     user-select: none;
 }
@@ -491,15 +472,4 @@ body.login-page .hero-actions {
     background: var(--text-main, #fff); 
     width: 16px; 
     border-radius: 4px;
-}
-.swipe-hint {
-    text-align: center; 
-    color: var(--text-muted); 
-    font-size: 0.75rem; 
-    margin-bottom: 1.5rem;
-    animation: pulseHint 2s infinite;
-}
-@keyframes pulseHint {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
 }

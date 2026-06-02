@@ -112,7 +112,7 @@ if (balanceToggleBtn) {
 }
 
 // =========================================
-// 6. INIT CHART & NAVIGATION
+// 6. INIT CHART & NAVIGATION (CHART CAROUSEL)
 // =========================================
 let expenseChart;
 
@@ -120,7 +120,8 @@ function initChart() {
     const ctx = document.getElementById('expenseChart');
     if (!ctx) return;
 
-    Chart.defaults.font.family = 'inherit';
+    // FIX: Tembak langsung nama font spesifik sesuai CSS lu biar nggak "aneh"
+    Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
 
     expenseChart = new Chart(ctx, {
         type: 'line', 
@@ -198,13 +199,16 @@ function getLocalYYYYMMDD(dateObj) {
     return `${year}-${month}-${day}`;
 }
 
-// Fungsi Klik Titik Navigasi
 window.goToSlide = function(index) {
     const swiper = document.getElementById('swipe-area');
     if (swiper) {
         const width = swiper.clientWidth;
+        swiper.style.scrollSnapType = 'none'; 
         swiper.style.scrollBehavior = 'smooth';
         swiper.scrollTo({ left: index * width });
+        setTimeout(() => {
+            swiper.style.scrollSnapType = 'x mandatory'; 
+        }, 300);
     }
 };
 
@@ -224,7 +228,7 @@ if (swiper) {
     let scrollLeft;
 
     swiper.addEventListener('mousedown', (e) => {
-        if (['INPUT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) return;
+        if (e.target.closest('input, button, a')) return; 
         
         isDown = true;
         swiper.style.scrollSnapType = 'none'; 
@@ -253,10 +257,61 @@ if (swiper) {
     
     swiper.addEventListener('mousemove', (e) => {
         if (!isDown) return;
-        e.preventDefault();
+        e.preventDefault(); 
         const x = e.pageX - swiper.offsetLeft;
-        const walk = (x - startX) * 2; 
+        const walk = (x - startX) * 1.5; 
         swiper.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// =========================================
+// 6.5. LOGIKA DRAG UNTUK RECENT TRANSACTIONS
+// =========================================
+const txList = document.getElementById('expense-list');
+if (txList) {
+    let isTxDown = false;
+    let txStartX;
+    let txScrollLeft;
+
+    txList.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.delete-btn')) return; 
+        
+        isTxDown = true;
+        txList.style.scrollSnapType = 'none'; 
+        txList.style.scrollBehavior = 'auto'; 
+        txStartX = e.pageX - txList.offsetLeft;
+        txScrollLeft = txList.scrollLeft;
+    });
+    
+    const stopTxDrag = () => {
+        if (!isTxDown) return;
+        isTxDown = false;
+        
+        const card = txList.querySelector('.expense-item');
+        if (card) {
+            const style = window.getComputedStyle(txList);
+            const gap = parseFloat(style.gap) || 0;
+            const cardWidth = card.offsetWidth + gap;
+            const activeIndex = Math.round(txList.scrollLeft / cardWidth);
+            
+            txList.style.scrollBehavior = 'smooth';
+            txList.scrollTo({ left: activeIndex * cardWidth });
+        }
+        
+        setTimeout(() => {
+            txList.style.scrollSnapType = 'x mandatory'; 
+        }, 300);
+    };
+
+    txList.addEventListener('mouseleave', stopTxDrag);
+    txList.addEventListener('mouseup', stopTxDrag);
+    
+    txList.addEventListener('mousemove', (e) => {
+        if (!isTxDown) return;
+        e.preventDefault(); 
+        const x = e.pageX - txList.offsetLeft;
+        const walk = (x - txStartX) * 1.5; 
+        txList.scrollLeft = txScrollLeft - walk;
     });
 }
 
@@ -296,19 +351,27 @@ window.logout = function () {
 // =========================================
 // 8. LOAD TRANSAKSI & INJECT DATA KE CHART
 // =========================================
+// Variabel memori buat bedain transaksi lama & transaksi baru
+let knownTxIds = new Set();
+let isInitialTxLoad = true;
+
 function loadTransactions(uid) {
     const list = document.getElementById('expense-list');
     if (!list) return;
 
-    list.innerHTML = `<li class="loading-placeholder">Loading transactions...</li>`;
+    if (isInitialTxLoad) {
+        list.innerHTML = `<li class="loading-placeholder">Loading transactions...</li>`;
+    }
 
     db.collection('users').doc(uid).collection('transactions')
         .orderBy('createdAt', 'desc')
         .onSnapshot(snapshot => {
             list.innerHTML = '';
             let total = 0;
-            currentDailyExpense = 0; // Reset kalkulasi
+            currentDailyExpense = 0;
             currentWeeklyExpense = 0;
+            
+            const currentIds = new Set();
 
             if (snapshot.empty) {
                 list.innerHTML = `<li class="empty-state">No transactions yet. Add your first one!</li>`;
@@ -329,6 +392,9 @@ function loadTransactions(uid) {
             }
 
             snapshot.forEach(doc => {
+                currentIds.add(doc.id);
+                const isNewTx = !isInitialTxLoad && !knownTxIds.has(doc.id);
+
                 const data = doc.data();
                 const amount = Number(data.amount);
 
@@ -340,12 +406,10 @@ function loadTransactions(uid) {
                         const txDateObj = data.createdAt.toDate();
                         const txDateStr = getLocalYYYYMMDD(txDateObj);
 
-                        // Cek pengeluaran hari ini (Today)
                         if (txDateObj.getTime() >= today.getTime()) {
                             currentDailyExpense += amount;
                         }
 
-                        // Inject data ke Chart (Last 7 Days)
                         const chartIndex = last7DaysDates.indexOf(txDateStr);
                         if (chartIndex !== -1) {
                             chartData[chartIndex] += amount;
@@ -361,7 +425,7 @@ function loadTransactions(uid) {
                 }
 
                 const li = document.createElement('li');
-                li.className = `expense-item flash-${data.type}`;
+                li.className = `expense-item ${isNewTx ? `flash-${data.type}` : ''}`;
                 li.innerHTML = `
                     <div class="expense-info">
                         <strong>${data.desc || (data.type === 'income' ? 'Income' : 'Expense')}</strong>
@@ -382,10 +446,11 @@ function loadTransactions(uid) {
                 list.appendChild(li);
             });
 
-            // Kalkulasi Total Pengeluaran Mingguan dari Chart Data
+            knownTxIds = currentIds;
+            isInitialTxLoad = false;
+
             currentWeeklyExpense = chartData.reduce((a, b) => a + b, 0);
 
-            // Update UI Balance & Spend Text
             lastKnownBalance = total;
             if (balanceEl) {
                 balanceEl.classList.toggle('balance-negative', total < 0);
