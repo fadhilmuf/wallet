@@ -35,10 +35,14 @@
                 Sign in with Google
             </button>
         </div>
+
+        <div style="margin-top: 3rem;">
+            <a href="/privacy.html" style="color: var(--text-muted); text-decoration: underline; font-size: 0.85rem; font-weight: 500;">Privacy Policy</a>
+        </div>
     </div>
 
     <script>
-        // CONFIG FIREBASE (Domain Bener)
+        // CONFIG FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCfEM_BCzUpBHtzx2LPvGDXiZ44g-NTyLY",
             authDomain: "wallet.randomhub.online",
@@ -86,7 +90,7 @@
             }, 400); 
         }, 3000);
 
-        // --- SISTEM LOGIN (ANTI-BALAPAN & TANPA GUEST) ---
+        // --- SISTEM LOGIN ---
         let isLoginAction = false; 
 
         firebase.auth().onAuthStateChanged(user => {
@@ -112,7 +116,6 @@
                 
                 const customNickname = `${attributes[Math.floor(Math.random() * attributes.length)]} ${animals[Math.floor(Math.random() * animals.length)]}`;
                 
-                // Return buat nahan proses pindah halaman
                 return result.user.updateProfile({ displayName: customNickname });
             }).then(() => {
                 window.location.href = '/'; 

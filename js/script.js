@@ -27,7 +27,7 @@ const eyeOpenIcon  = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 const eyeClosedIcon= `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
 
 // =========================================
-// 3. TEMA DARK MODE (pakai localStorage, ini oke karena bukan data user)
+// 3. TEMA DARK MODE & SINKRONISASI GRAFIK
 // =========================================
 const themeToggleBtn = document.getElementById('theme-toggle');
 
@@ -43,6 +43,8 @@ if (themeToggleBtn) {
         const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         themeToggleBtn.innerHTML = isDark ? sunIcon : moonIcon;
+        
+        updateChartTheme();
     });
 }
 
@@ -65,28 +67,34 @@ if (typeBtns && typeInput) {
 // =========================================
 // 5. HIDE / SHOW BALANCE — state di Firestore
 // =========================================
-let isBalanceHidden = true; // default selalu hidden sebelum Firestore di-load
+let isBalanceHidden = true; 
 let lastKnownBalance = 0;
+let currentDailyExpense = 0;
+let currentWeeklyExpense = 0;
 
 const balanceToggleBtn = document.getElementById('balance-toggle');
 const balanceEl = document.getElementById('total-balance');
 
-// Render tampilan balance sesuai state saat ini
 function applyBalanceVisibility() {
     if (!balanceEl || !balanceToggleBtn) return;
+    const spendTodayEl = document.getElementById('spend-today');
+    const spendWeekEl = document.getElementById('spend-week');
+
     if (isBalanceHidden) {
         balanceEl.innerText = 'Rp ••••••';
+        if (spendTodayEl) spendTodayEl.innerText = 'Rp ••••••';
+        if (spendWeekEl) spendWeekEl.innerText = 'Rp ••••••';
         balanceToggleBtn.innerHTML = eyeClosedIcon;
     } else {
         balanceEl.innerText = `Rp ${lastKnownBalance.toLocaleString('id-ID')}`;
+        if (spendTodayEl) spendTodayEl.innerText = `Rp ${currentDailyExpense.toLocaleString('id-ID')}`;
+        if (spendWeekEl) spendWeekEl.innerText = `Rp ${currentWeeklyExpense.toLocaleString('id-ID')}`;
         balanceToggleBtn.innerHTML = eyeOpenIcon;
     }
 }
 
-// Langsung apply hidden sebelum apapun — biar Rp 0 di HTML ga sempat keliatan
 applyBalanceVisibility();
 
-// Simpan preference ke Firestore
 function saveBalancePreference(uid, hidden) {
     db.collection('users').doc(uid).set(
         { balanceHidden: hidden },
@@ -104,48 +112,194 @@ if (balanceToggleBtn) {
 }
 
 // =========================================
-// 6. OTENTIKASI & INIT
+// 6. INIT CHART & NAVIGATION
+// =========================================
+let expenseChart;
+
+function initChart() {
+    const ctx = document.getElementById('expenseChart');
+    if (!ctx) return;
+
+    Chart.defaults.font.family = 'inherit';
+
+    expenseChart = new Chart(ctx, {
+        type: 'line', 
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Pengeluaran',
+                data: [0, 0, 0, 0, 0, 0, 0],
+                borderWidth: 2,
+                tension: 0, 
+                fill: false, 
+                pointRadius: 4, 
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: { font: { size: 11 } } 
+                },
+                y: { 
+                    border: { display: false },
+                    beginAtZero: true,
+                    ticks: { 
+                        maxTicksLimit: 5, 
+                        font: { size: 11 },
+                        callback: function(value) {
+                            if (value === 0) return '0';
+                            return value >= 1000 ? (value / 1000) + 'k' : value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    updateChartTheme();
+}
+
+function updateChartTheme() {
+    if (!expenseChart) return;
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    const textColor = isDark ? '#a1a1aa' : '#71717a';      
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'; 
+    const lineColor = isDark ? '#ffffff' : '#000000'; 
+
+    expenseChart.data.datasets[0].borderColor = lineColor;
+    expenseChart.data.datasets[0].backgroundColor = lineColor;
+    expenseChart.options.scales.x.ticks.color = textColor;
+    expenseChart.options.scales.y.ticks.color = textColor;
+    expenseChart.options.scales.y.grid.color = gridColor;
+    
+    expenseChart.update();
+}
+
+function getLocalYYYYMMDD(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Fungsi Klik Titik Navigasi
+window.goToSlide = function(index) {
+    const swiper = document.getElementById('swipe-area');
+    if (swiper) {
+        const width = swiper.clientWidth;
+        swiper.style.scrollBehavior = 'smooth';
+        swiper.scrollTo({ left: index * width });
+    }
+};
+
+const swiper = document.getElementById('swipe-area');
+if (swiper) {
+    swiper.addEventListener('scroll', () => {
+        const scrollLeft = swiper.scrollLeft;
+        const width = swiper.clientWidth;
+        const activeIndex = Math.round(scrollLeft / width);
+        
+        document.getElementById('dot-1').classList.toggle('active', activeIndex === 0);
+        document.getElementById('dot-2').classList.toggle('active', activeIndex === 1);
+    });
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    swiper.addEventListener('mousedown', (e) => {
+        if (['INPUT', 'BUTTON', 'LABEL'].includes(e.target.tagName)) return;
+        
+        isDown = true;
+        swiper.style.scrollSnapType = 'none'; 
+        swiper.style.scrollBehavior = 'auto'; 
+        startX = e.pageX - swiper.offsetLeft;
+        scrollLeft = swiper.scrollLeft;
+    });
+    
+    const stopDragAndSnap = () => {
+        if (!isDown) return;
+        isDown = false;
+        
+        const width = swiper.clientWidth;
+        const activeIndex = Math.round(swiper.scrollLeft / width);
+        
+        swiper.style.scrollBehavior = 'smooth';
+        swiper.scrollTo({ left: activeIndex * width });
+        
+        setTimeout(() => {
+            swiper.style.scrollSnapType = 'x mandatory'; 
+        }, 300);
+    };
+
+    swiper.addEventListener('mouseleave', stopDragAndSnap);
+    swiper.addEventListener('mouseup', stopDragAndSnap);
+    
+    swiper.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - swiper.offsetLeft;
+        const walk = (x - startX) * 2; 
+        swiper.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// =========================================
+// 7. OTENTIKASI & INIT
 // =========================================
 auth.onAuthStateChanged(user => {
     if (!user) {
-        window.location.href = '/login';
+        window.location.href = '/login.html';
         return;
     }
 
-    // Tampilkan nama user
     const greeting = document.getElementById('user-greeting');
     if (greeting) {
         greeting.innerText = `Hello, ${user.displayName || 'User'}!`;
     }
 
-    // Load preference hide/show dari Firestore dulu, baru load transaksi
+    initChart();
+
     db.collection('users').doc(user.uid).get().then(doc => {
         if (doc.exists && typeof doc.data().balanceHidden !== 'undefined') {
             isBalanceHidden = doc.data().balanceHidden;
         }
-        // Kalau field belum ada (user baru), default tetap true (hidden)
         applyBalanceVisibility();
         loadTransactions(user.uid);
     }).catch(() => {
-        // Kalau gagal ambil preference, tetap load transaksi dengan default hidden
         loadTransactions(user.uid);
     });
 });
 
 window.logout = function () {
     auth.signOut().then(() => {
-        window.location.href = '/login';
+        window.location.href = '/login.html';
     });
 };
 
 // =========================================
-// 7. LOAD TRANSAKSI
+// 8. LOAD TRANSAKSI & INJECT DATA KE CHART
 // =========================================
 function loadTransactions(uid) {
     const list = document.getElementById('expense-list');
     if (!list) return;
 
-    // Loading placeholder untuk list (bukan balance — balance tetap ••••••)
     list.innerHTML = `<li class="loading-placeholder">Loading transactions...</li>`;
 
     db.collection('users').doc(uid).collection('transactions')
@@ -153,17 +307,51 @@ function loadTransactions(uid) {
         .onSnapshot(snapshot => {
             list.innerHTML = '';
             let total = 0;
+            currentDailyExpense = 0; // Reset kalkulasi
+            currentWeeklyExpense = 0;
 
             if (snapshot.empty) {
                 list.innerHTML = `<li class="empty-state">No transactions yet. Add your first one!</li>`;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const last7DaysLabels = [];
+            const last7DaysDates = [];
+            const chartData = [0, 0, 0, 0, 0, 0, 0];
+            
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date(today);
+                d.setDate(today.getDate() - i);
+                last7DaysLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+                last7DaysDates.push(getLocalYYYYMMDD(d));
             }
 
             snapshot.forEach(doc => {
                 const data = doc.data();
                 const amount = Number(data.amount);
 
-                if (data.type === 'income') total += amount;
-                else total -= amount;
+                if (data.type === 'income') {
+                    total += amount;
+                } else {
+                    total -= amount;
+                    if (data.createdAt) {
+                        const txDateObj = data.createdAt.toDate();
+                        const txDateStr = getLocalYYYYMMDD(txDateObj);
+
+                        // Cek pengeluaran hari ini (Today)
+                        if (txDateObj.getTime() >= today.getTime()) {
+                            currentDailyExpense += amount;
+                        }
+
+                        // Inject data ke Chart (Last 7 Days)
+                        const chartIndex = last7DaysDates.indexOf(txDateStr);
+                        if (chartIndex !== -1) {
+                            chartData[chartIndex] += amount;
+                        }
+                    }
+                }
 
                 let dateStr = '';
                 if (data.createdAt) {
@@ -194,13 +382,22 @@ function loadTransactions(uid) {
                 list.appendChild(li);
             });
 
-            // Update balance tanpa ganggu visibility state
+            // Kalkulasi Total Pengeluaran Mingguan dari Chart Data
+            currentWeeklyExpense = chartData.reduce((a, b) => a + b, 0);
+
+            // Update UI Balance & Spend Text
             lastKnownBalance = total;
             if (balanceEl) {
                 balanceEl.classList.toggle('balance-negative', total < 0);
                 balanceEl.classList.toggle('balance-positive', total > 0);
             }
             applyBalanceVisibility();
+
+            if (expenseChart) {
+                expenseChart.data.labels = last7DaysLabels;
+                expenseChart.data.datasets[0].data = chartData;
+                expenseChart.update();
+            }
 
         }, err => {
             console.error("Firestore error:", err);
@@ -209,7 +406,7 @@ function loadTransactions(uid) {
 }
 
 // =========================================
-// 8. TAMBAH TRANSAKSI
+// 9. TAMBAH TRANSAKSI
 // =========================================
 const expenseForm = document.getElementById('expense-form');
 if (expenseForm) {
@@ -236,6 +433,8 @@ if (expenseForm) {
             typeBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('[data-type="expense"]').classList.add('active');
             typeInput.value = 'expense';
+            
+            goToSlide(0); 
         }).catch(err => {
             alert("Gagal menambah data: " + err.message);
         }).finally(() => {
@@ -246,7 +445,7 @@ if (expenseForm) {
 }
 
 // =========================================
-// 9. HAPUS TRANSAKSI
+// 10. HAPUS TRANSAKSI
 // =========================================
 function deleteTx(id) {
     const user = auth.currentUser;

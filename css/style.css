@@ -123,7 +123,6 @@ button, input, select, textarea {
     color: var(--text-main);
 }
 
-/* FIX 1: Balance color states */
 .total-amount { 
     font-size: 2.5rem; 
     font-weight: 800; 
@@ -140,7 +139,6 @@ button, input, select, textarea {
     color: var(--text-main);
 }
 
-/* FIX 2: Loading placeholder style */
 .balance-loading {
     font-size: 1rem;
     font-weight: 500;
@@ -189,7 +187,6 @@ input:focus {
 
 input::placeholder { color: var(--text-muted); }
 
-/* FIX 3: Disabled state for submit button */
 .btn-primary { 
     width: 100%; 
     padding: 0.75rem; 
@@ -216,7 +213,6 @@ input::placeholder { color: var(--text-muted); }
     margin-top: 1rem;
 }
 
-/* FIX 4: Empty state & loading placeholder styles */
 .empty-state,
 .loading-placeholder {
     padding: 2rem 0;
@@ -300,8 +296,6 @@ input::placeholder { color: var(--text-muted); }
 .expense-price { font-weight: 600; font-size: 0.95rem; }
 
 .text-success { color: var(--success); }
-
-/* FIX 5: text-danger was incorrectly set to --text-main, now uses --danger */
 .text-danger { color: var(--danger); }
 
 .delete-btn { 
@@ -423,33 +417,67 @@ body.login-page .hero-actions {
    RESPONSIVE (MOBILE)
    ========================================= */
 @media (max-width: 480px) {
-    body {
-        padding: 1rem;
-    }
+    body { padding: 1rem; }
+    .dashboard-container { margin-top: 1rem; }
+    .total-amount { font-size: 2rem; }
+    .expense-info strong { font-size: 0.875rem; }
+    .expense-price { font-size: 0.875rem; }
+    body.login-page .top-nav { top: 1rem; right: 1rem; }
+    body.login-page .hero-container { padding: 1rem; padding-top: 4rem; }
+}
 
-    .dashboard-container {
-        margin-top: 1rem;
-    }
-
-    .total-amount {
-        font-size: 2rem;
-    }
-
-    .expense-info strong {
-        font-size: 0.875rem;
-    }
-
-    .expense-price {
-        font-size: 0.875rem;
-    }
-
-    body.login-page .top-nav {
-        top: 1rem;
-        right: 1rem;
-    }
-
-    body.login-page .hero-container {
-        padding: 1rem;
-        padding-top: 4rem;
-    }
+/* =========================================
+   SWIPE CAROUSEL & CHART STYLES (NEW)
+   ========================================= */
+.carousel-wrapper {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    cursor: grab;
+}
+.carousel-wrapper:active {
+    cursor: grabbing;
+}
+.carousel-wrapper::-webkit-scrollbar {
+    display: none;
+}
+.carousel-item {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    user-select: none;
+}
+.indicator-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 0.5rem;
+}
+.dot {
+    width: 8px; 
+    height: 8px; 
+    border-radius: 50%; 
+    background: var(--border-color, #444); 
+    transition: 0.3s ease;
+}
+.dot.active { 
+    background: var(--text-main, #fff); 
+    width: 16px; 
+    border-radius: 4px;
+}
+.swipe-hint {
+    text-align: center; 
+    color: var(--text-muted); 
+    font-size: 0.75rem; 
+    margin-bottom: 1.5rem;
+    animation: pulseHint 2s infinite;
+}
+@keyframes pulseHint {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
 }
