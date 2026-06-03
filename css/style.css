@@ -131,13 +131,8 @@ button, input, select, textarea {
     transition: color 0.3s ease;
 }
 
-.total-amount.balance-negative {
-    color: var(--danger);
-}
-
-.total-amount.balance-positive {
-    color: var(--text-main);
-}
+.total-amount.balance-negative { color: var(--danger); }
+.total-amount.balance-positive { color: var(--text-main); }
 
 .form-card {
     background: var(--bg-container);
@@ -222,6 +217,101 @@ input::placeholder { color: var(--text-muted); }
 }
 
 /* =========================================
+   CHART HEADER & CONTROLS (BARU)
+   ========================================= */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chart-title {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.month-select {
+    font-size: 0.775rem;
+    font-weight: 500;
+    color: var(--text-main);
+    background: var(--bg-total);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    max-width: 140px;
+}
+
+.month-select:hover { border-color: var(--text-muted); }
+
+.chart-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* =========================================
+   RECENT TRANSACTIONS HEADER + EXPORT (BARU)
+   ========================================= */
+.tx-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.tx-title {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.775rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 28px;
+}
+
+.btn-export:hover {
+    color: var(--text-main);
+    border-color: var(--text-muted);
+    background: var(--bg-total);
+}
+
+/* =========================================
    SCROLLABLE EXPENSE LIST (KARTU HORIZONTAL)
    ========================================= */
 .expense-list { 
@@ -237,13 +327,9 @@ input::placeholder { color: var(--text-muted); }
     scrollbar-width: none;  
 }
 
-.expense-list:active {
-    cursor: grabbing;
-}
+.expense-list:active { cursor: grabbing; }
 
-.expense-list::-webkit-scrollbar {
-    display: none; 
-}
+.expense-list::-webkit-scrollbar { display: none; }
 
 .empty-state,
 .loading-placeholder {
@@ -265,13 +351,10 @@ input::placeholder { color: var(--text-muted); }
     justify-content: space-between; 
     scroll-snap-align: start;
     user-select: none;
-    
-    /* FIX SMOOTHNESS: Kartu biasa (lama) langsung tampil tanpa animasi */
     opacity: 1;
     transform: none;
 }
 
-/* Animasi HANYA untuk kartu yang baru disubmit */
 .expense-item.flash-income {
     animation: newCardIncome 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -281,20 +364,18 @@ input::placeholder { color: var(--text-muted); }
 }
 
 @keyframes newCardIncome {
-    0% { transform: translateX(20px); background-color: rgba(16, 185, 129, 0.25); border-color: var(--success); }
-    15% { transform: translateX(0); }
+    0%   { transform: translateX(20px); background-color: rgba(16, 185, 129, 0.25); border-color: var(--success); }
+    15%  { transform: translateX(0); }
     100% { background-color: var(--bg-container); border-color: var(--border-color); }
 }
 
 @keyframes newCardExpense {
-    0% { transform: translateX(20px); background-color: rgba(239, 68, 68, 0.25); border-color: var(--danger); }
-    15% { transform: translateX(0); }
+    0%   { transform: translateX(20px); background-color: rgba(239, 68, 68, 0.25); border-color: var(--danger); }
+    15%  { transform: translateX(0); }
     100% { background-color: var(--bg-container); border-color: var(--border-color); }
 }
 
-.expense-info {
-    margin-bottom: 1rem;
-}
+.expense-info { margin-bottom: 1rem; }
 
 .expense-info strong {
     display: block;
@@ -319,7 +400,7 @@ input::placeholder { color: var(--text-muted); }
 .expense-price { font-weight: 700; font-size: 0.95rem; }
 
 .text-success { color: var(--success); }
-.text-danger { color: var(--danger); }
+.text-danger  { color: var(--danger); }
 
 .delete-btn { 
     background: transparent; 
@@ -336,6 +417,54 @@ input::placeholder { color: var(--text-muted); }
     color: var(--danger);
     border-color: var(--danger);
     background: rgba(239, 68, 68, 0.1);
+}
+
+/* =========================================
+   SWIPE CAROUSEL
+   ========================================= */
+.carousel-wrapper {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    cursor: grab;
+}
+
+.carousel-wrapper:active { cursor: grabbing; }
+.carousel-wrapper::-webkit-scrollbar { display: none; }
+
+.carousel-item {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    scroll-snap-align: start;
+    user-select: none;
+}
+
+.indicator-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.dot {
+    width: 8px; 
+    height: 8px; 
+    border-radius: 50%; 
+    background: var(--border-color, #444); 
+    transition: 0.3s ease;
+}
+
+.dot.active { 
+    background: var(--text-main, #fff); 
+    width: 16px; 
+    border-radius: 4px;
 }
 
 /* =========================================
@@ -422,54 +551,4 @@ body.login-page .hero-actions {
     .expense-price { font-size: 0.875rem; }
     body.login-page .top-nav { top: 1rem; right: 1rem; }
     body.login-page .hero-container { padding: 1rem; padding-top: 4rem; }
-}
-
-/* =========================================
-   SWIPE CAROUSEL CHART
-   ========================================= */
-.carousel-wrapper {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.5rem;
-    cursor: grab;
-}
-.carousel-wrapper:active {
-    cursor: grabbing;
-}
-.carousel-wrapper::-webkit-scrollbar {
-    display: none;
-}
-.carousel-item {
-    flex: 0 0 100%;
-    
-    /* FIX CHART MOBILE: Paksa dimensinya biar ga penyok */
-    width: 100%;
-    min-width: 100%;
-    
-    scroll-snap-align: start;
-    user-select: none;
-}
-.indicator-dots {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 0.5rem;
-}
-.dot {
-    width: 8px; 
-    height: 8px; 
-    border-radius: 50%; 
-    background: var(--border-color, #444); 
-    transition: 0.3s ease;
-}
-.dot.active { 
-    background: var(--text-main, #fff); 
-    width: 16px; 
-    border-radius: 4px;
 }
