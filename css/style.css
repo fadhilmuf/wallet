@@ -197,6 +197,7 @@ input::placeholder { color: var(--text-muted); }
     border-radius: 8px;
 }
 
+/* FIX STYLING METHOD-BTN ADA DI SINI */
 .type-btn, .method-btn {
     flex: 1;
     padding: 0.5rem;
@@ -217,7 +218,7 @@ input::placeholder { color: var(--text-muted); }
 }
 
 /* =========================================
-   CHART HEADER & OVERVIEW FLOATING (BARU)
+   CHART HEADER & OVERVIEW FLOATING
    ========================================= */
 .chart-header {
     display: flex;
@@ -249,11 +250,10 @@ input::placeholder { color: var(--text-muted); }
 
 .month-select:hover { border-color: var(--text-muted); }
 
-/* --- PERUBAHAN UTAMA: OVERVIEW CONTENT --- */
 .overview-content {
     position: relative;
     width: 100%;
-    min-height: 220px; /* Ruang biar teks nggak tabrakan */
+    min-height: 220px;
     flex-grow: 1;
     display: flex;
     justify-content: center;
@@ -278,14 +278,12 @@ input::placeholder { color: var(--text-muted); }
     z-index: 2;
 }
 
-/* POSISI KIRI ATAS UNTUK INCOME */
 .income-stat {
     top: 0;
     left: 0;
     align-items: flex-start;
 }
 
-/* POSISI KANAN BAWAH UNTUK EXPENSE */
 .expense-stat {
     bottom: 0;
     right: 0;

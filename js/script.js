@@ -171,10 +171,10 @@ function initChart() {
         data: {
             labels: ['Income', 'Expense'],
             datasets: [{
-                data: [1, 1], // Data kosong bawaan
+                data: [1, 1], 
                 backgroundColor: ['#e4e4e7', '#e4e4e7'],
                 borderWidth: 0,
-                cutout: '75%', // Bikin bentuknya kayak cincin (donut) tipis
+                cutout: '75%', 
             }]
         },
         options: {
@@ -182,7 +182,7 @@ function initChart() {
             maintainAspectRatio: false,
             plugins: { 
                 legend: { display: false }, 
-                tooltip: { enabled: false } // Sengaja dimatiin krn datanya udah ada di sebelah
+                tooltip: { enabled: false } 
             },
         }
     });
@@ -194,7 +194,6 @@ function updateChartTheme() {
     if (!expenseChart) return;
     const isDark = document.body.classList.contains('dark-mode');
     
-    // Warnain lingkaran jadi abu-abu/hitam kalau transaksinya kosong (0 vs 0)
     if (expenseChart.data.datasets[0].data.length === 1) {
         const emptyColor = isDark ? '#27272a' : '#e4e4e7';
         expenseChart.data.datasets[0].backgroundColor = [emptyColor];
@@ -251,7 +250,6 @@ function renderChartForMonth(monthKey) {
     currentMonthIncome = 0;
     currentMonthExpense = 0;
 
-    // Kalkulasi Total Income & Expense bulan ini
     allTransactions.forEach(tx => {
         if (!tx.createdAt) return;
         const d = tx.createdAt.toDate();
@@ -265,7 +263,6 @@ function renderChartForMonth(monthKey) {
     let expPct = 0;
     let totalFlow = currentMonthIncome + currentMonthExpense;
     
-    // Update persentase dan warna chart
     if (totalFlow > 0) {
         incPct = Math.round((currentMonthIncome / totalFlow) * 100);
         expPct = Math.round((currentMonthExpense / totalFlow) * 100);
@@ -273,7 +270,6 @@ function renderChartForMonth(monthKey) {
         expenseChart.data.datasets[0].data = [currentMonthIncome, currentMonthExpense];
         expenseChart.data.datasets[0].backgroundColor = ['#10b981', '#ef4444'];
     } else {
-        // Kalau gaada transaksi, balikin ke warna netral
         const isDark = document.body.classList.contains('dark-mode');
         const emptyColor = isDark ? '#27272a' : '#e4e4e7';
         expenseChart.data.datasets[0].data = [1];
@@ -282,11 +278,9 @@ function renderChartForMonth(monthKey) {
     
     expenseChart.update();
 
-    // Update Text HTML
     document.getElementById('stat-inc-pct').innerText = incPct + '%';
     document.getElementById('stat-exp-pct').innerText = expPct + '%';
     
-    // Panggil ulang biar format Rupiahnya ngikutin rules sensor mata
     applyBalanceVisibility(); 
 }
 
@@ -515,7 +509,6 @@ function loadTransactions(uid) {
                 netEl.classList.toggle('balance-positive', lastKnownNet > 0);
             }
 
-            // Update UI dan Chart baru
             populateMonthFilter();
             renderChartForMonth(getSelectedMonth());
 
