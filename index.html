@@ -26,11 +26,24 @@
         </div>
 
         <div class="total-container" style="margin-bottom: 0.5rem;">
+            <!-- GRAND TOTAL (OVERVIEW) -->
             <div style="color: var(--text-muted); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">
-                Total Balance
+                Net Balance (Overview)
                 <button id="balance-toggle" class="balance-toggle-btn" title="Show/hide balance"></button>
             </div>
-            <div class="total-amount" id="total-balance" style="margin-bottom: 0.75rem;">Rp 0</div>
+            <div class="total-amount" id="total-balance" style="margin-bottom: 1.2rem;">Rp 0</div>
+
+            <!-- GRID DUA SALDO: CASH & PAYLATER -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 500; margin-bottom: 0.25rem;">Cash / Bank</div>
+                    <div class="total-amount" id="cash-balance" style="font-size: 1.2rem;">Rp 0</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 500; margin-bottom: 0.25rem;">Paylater Due</div>
+                    <div class="total-amount" id="paylater-balance" style="font-size: 1.2rem; color: var(--danger);">Rp 0</div>
+                </div>
+            </div>
             
             <div style="display: flex; gap: 1.2rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">
                 <div>Today: <span id="spend-today" style="color: var(--text-main); font-weight: 700;">Rp 0</span></div>
@@ -59,6 +72,17 @@
                             </div>
                             <input type="hidden" id="type" value="expense">
                         </div>
+
+                        <!-- PAYMENT METHOD -->
+                        <div class="form-group" id="method-group">
+                            <label>Payment Method</label>
+                            <div class="type-toggle">
+                                <button type="button" class="method-btn active" data-method="cash">Cash / Bank</button>
+                                <button type="button" class="method-btn" data-method="paylater">Paylater</button>
+                            </div>
+                            <input type="hidden" id="method" value="cash">
+                        </div>
+
                         <div class="form-group">
                             <label for="desc">Description (Optional)</label>
                             <input type="text" id="desc" placeholder="E.g., Monthly salary / Coffee">
@@ -72,20 +96,41 @@
                 </div>
             </div>
 
-            <!-- SLIDE 2: CHART (income vs expense, filter bulanan) -->
+            <!-- SLIDE 2: DONUT CHART OVERVIEW (FLOATING TEXT) -->
             <div class="carousel-item">
                 <div class="form-card" style="margin-bottom: 0; padding: 1.25rem 1rem; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;">
                     <div class="chart-header">
                         <h3 class="chart-title">Overview</h3>
                         <select id="month-filter" class="month-select"></select>
                     </div>
-                    <div style="position: relative; flex-grow: 1; min-height: 180px; width: 100%;">
-                        <canvas id="expenseChart"></canvas>
+                    
+                    <div class="overview-content">
+                        <!-- INCOME TEXT (KIRI ATAS) -->
+                        <div class="stat-item income-stat">
+                            <div class="stat-header">
+                                <span class="legend-dot" style="background: var(--success);"></span>
+                                <span class="stat-label">Income</span>
+                                <span class="stat-pct" id="stat-inc-pct">0%</span>
+                            </div>
+                            <div class="stat-val text-success" id="stat-inc-val">Rp 0</div>
+                        </div>
+
+                        <!-- CENTER DONUT -->
+                        <div class="donut-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+
+                        <!-- EXPENSE TEXT (KANAN BAWAH) -->
+                        <div class="stat-item expense-stat">
+                            <div class="stat-header" style="flex-direction: row-reverse;">
+                                <span class="legend-dot" style="background: var(--danger);"></span>
+                                <span class="stat-label">Expense</span>
+                                <span class="stat-pct" id="stat-exp-pct">0%</span>
+                            </div>
+                            <div class="stat-val text-danger" id="stat-exp-val">Rp 0</div>
+                        </div>
                     </div>
-                    <div class="chart-legend">
-                        <span class="legend-item"><span class="legend-dot" style="background: #10b981;"></span>Income</span>
-                        <span class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>Expense</span>
-                    </div>
+
                 </div>
             </div>
 

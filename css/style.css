@@ -197,7 +197,7 @@ input::placeholder { color: var(--text-muted); }
     border-radius: 8px;
 }
 
-.type-btn {
+.type-btn, .method-btn {
     flex: 1;
     padding: 0.5rem;
     background: transparent;
@@ -210,14 +210,14 @@ input::placeholder { color: var(--text-muted); }
     transition: all 0.2s ease;
 }
 
-.type-btn.active {
+.type-btn.active, .method-btn.active {
     background: var(--bg-container);
     color: var(--text-main);
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* =========================================
-   CHART HEADER & CONTROLS (BARU)
+   CHART HEADER & OVERVIEW FLOATING (BARU)
    ========================================= */
 .chart-header {
     display: flex;
@@ -249,18 +249,71 @@ input::placeholder { color: var(--text-muted); }
 
 .month-select:hover { border-color: var(--text-muted); }
 
-.chart-legend {
+/* --- PERUBAHAN UTAMA: OVERVIEW CONTENT --- */
+.overview-content {
+    position: relative;
+    width: 100%;
+    min-height: 220px; /* Ruang biar teks nggak tabrakan */
+    flex-grow: 1;
     display: flex;
-    gap: 14px;
-    margin-top: 10px;
+    justify-content: center;
+    align-items: center;
 }
 
-.legend-item {
+.donut-container {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.stat-item {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 2;
+}
+
+/* POSISI KIRI ATAS UNTUK INCOME */
+.income-stat {
+    top: 0;
+    left: 0;
+    align-items: flex-start;
+}
+
+/* POSISI KANAN BAWAH UNTUK EXPENSE */
+.expense-stat {
+    bottom: 0;
+    right: 0;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.stat-header {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.75rem;
+    gap: 6px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
     color: var(--text-muted);
+    font-weight: 500;
+}
+
+.stat-pct {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.stat-val {
+    font-size: 1.1rem;
+    font-weight: 700;
 }
 
 .legend-dot {
@@ -272,7 +325,7 @@ input::placeholder { color: var(--text-muted); }
 }
 
 /* =========================================
-   RECENT TRANSACTIONS HEADER + EXPORT (BARU)
+   RECENT TRANSACTIONS HEADER + EXPORT
    ========================================= */
 .tx-header {
     display: flex;
@@ -312,7 +365,7 @@ input::placeholder { color: var(--text-muted); }
 }
 
 /* =========================================
-   SCROLLABLE EXPENSE LIST (KARTU HORIZONTAL)
+   SCROLLABLE EXPENSE LIST
    ========================================= */
 .expense-list { 
     display: flex;

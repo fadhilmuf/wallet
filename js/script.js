@@ -48,10 +48,13 @@ if (themeToggleBtn) {
 }
 
 // =========================================
-// 4. INCOME/EXPENSE TOGGLE
+// 4. INCOME/EXPENSE & METHOD TOGGLE
 // =========================================
-const typeBtns  = document.querySelectorAll('.type-btn');
-const typeInput = document.getElementById('type');
+const typeBtns    = document.querySelectorAll('.type-btn');
+const typeInput   = document.getElementById('type');
+const methodGroup = document.getElementById('method-group'); 
+const methodBtns  = document.querySelectorAll('.method-btn');
+const methodInput = document.getElementById('method');
 
 if (typeBtns && typeInput) {
     typeBtns.forEach(btn => {
@@ -59,6 +62,26 @@ if (typeBtns && typeInput) {
             typeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             typeInput.value = btn.dataset.type;
+
+            if (btn.dataset.type === 'income') {
+                if (methodGroup) methodGroup.style.display = 'none'; 
+                methodBtns.forEach(b => b.classList.remove('active'));
+                const cashBtn = document.querySelector('.method-btn[data-method="cash"]');
+                if (cashBtn) cashBtn.classList.add('active');
+                if (methodInput) methodInput.value = 'cash';
+            } else {
+                if (methodGroup) methodGroup.style.display = 'block'; 
+            }
+        });
+    });
+}
+
+if (methodBtns && methodInput) {
+    methodBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            methodBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            methodInput.value = btn.dataset.method;
         });
     });
 }
@@ -66,33 +89,47 @@ if (typeBtns && typeInput) {
 // =========================================
 // 5. HIDE / SHOW BALANCE
 // =========================================
-let isBalanceHidden    = true;
-let lastKnownBalance   = 0;
+let isBalanceHidden      = true;
+let lastKnownNet         = 0;
+let lastKnownCash        = 0;
+let lastKnownPaylater    = 0;
 let currentDailyExpense  = 0;
 let currentWeeklyExpense = 0;
+let currentMonthIncome   = 0;
+let currentMonthExpense  = 0;
 
 const balanceToggleBtn = document.getElementById('balance-toggle');
-const balanceEl        = document.getElementById('total-balance');
+const netEl            = document.getElementById('total-balance');
+const cashEl           = document.getElementById('cash-balance');
+const paylaterEl       = document.getElementById('paylater-balance');
 
 function applyBalanceVisibility() {
-    if (!balanceEl || !balanceToggleBtn) return;
+    if (!netEl || !balanceToggleBtn) return;
     const spendTodayEl = document.getElementById('spend-today');
     const spendWeekEl  = document.getElementById('spend-week');
+    const incValEl     = document.getElementById('stat-inc-val');
+    const expValEl     = document.getElementById('stat-exp-val');
 
     if (isBalanceHidden) {
-        balanceEl.innerText = 'Rp ••••••';
+        netEl.innerText      = 'Rp ••••••';
+        cashEl.innerText     = 'Rp ••••••';
+        paylaterEl.innerText = 'Rp ••••••';
         if (spendTodayEl) spendTodayEl.innerText = 'Rp ••••••';
         if (spendWeekEl)  spendWeekEl.innerText  = 'Rp ••••••';
+        if (incValEl)     incValEl.innerText     = 'Rp ••••••';
+        if (expValEl)     expValEl.innerText     = 'Rp ••••••';
         balanceToggleBtn.innerHTML = eyeClosedIcon;
     } else {
-        balanceEl.innerText = `Rp ${lastKnownBalance.toLocaleString('id-ID')}`;
+        netEl.innerText      = `Rp ${lastKnownNet.toLocaleString('id-ID')}`;
+        cashEl.innerText     = `Rp ${lastKnownCash.toLocaleString('id-ID')}`;
+        paylaterEl.innerText = `Rp ${lastKnownPaylater.toLocaleString('id-ID')}`;
         if (spendTodayEl) spendTodayEl.innerText = `Rp ${currentDailyExpense.toLocaleString('id-ID')}`;
         if (spendWeekEl)  spendWeekEl.innerText  = `Rp ${currentWeeklyExpense.toLocaleString('id-ID')}`;
+        if (incValEl)     incValEl.innerText     = `Rp ${currentMonthIncome.toLocaleString('id-ID')}`;
+        if (expValEl)     expValEl.innerText     = `Rp ${currentMonthExpense.toLocaleString('id-ID')}`;
         balanceToggleBtn.innerHTML = eyeOpenIcon;
     }
 }
-
-applyBalanceVisibility();
 
 function saveBalancePreference(uid, hidden) {
     db.collection('users').doc(uid).set(
@@ -111,7 +148,7 @@ if (balanceToggleBtn) {
 }
 
 // =========================================
-// 6. CHART — income vs expense per hari
+// 6. CHART — DONUT CHART OVERVIEW
 // =========================================
 let expenseChart;
 let allTransactions = [];
@@ -130,55 +167,23 @@ function initChart() {
     Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
 
     expenseChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
-            labels: [],
-            datasets: [
-                {
-                    label: 'Income',
-                    data: [],
-                    backgroundColor: 'rgba(16, 185, 129, 0.75)',
-                    borderRadius: 3,
-                    borderSkipped: false,
-                },
-                {
-                    label: 'Expense',
-                    data: [],
-                    backgroundColor: 'rgba(239, 68, 68, 0.75)',
-                    borderRadius: 3,
-                    borderSkipped: false,
-                }
-            ]
+            labels: ['Income', 'Expense'],
+            datasets: [{
+                data: [1, 1], // Data kosong bawaan
+                backgroundColor: ['#e4e4e7', '#e4e4e7'],
+                borderWidth: 0,
+                cutout: '75%', // Bikin bentuknya kayak cincin (donut) tipis
+            }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` Rp ${ctx.raw.toLocaleString('id-ID')}`
-                    }
-                }
+            plugins: { 
+                legend: { display: false }, 
+                tooltip: { enabled: false } // Sengaja dimatiin krn datanya udah ada di sebelah
             },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: { font: { size: 10 }, autoSkip: true, maxTicksLimit: 10 }
-                },
-                y: {
-                    border: { display: false },
-                    beginAtZero: true,
-                    ticks: {
-                        maxTicksLimit: 5,
-                        font: { size: 10 },
-                        callback: v => v >= 1000000
-                            ? (v / 1000000).toFixed(1) + 'jt'
-                            : v >= 1000 ? (v / 1000).toFixed(0) + 'rb' : v
-                    }
-                }
-            }
         }
     });
 
@@ -188,17 +193,17 @@ function initChart() {
 function updateChartTheme() {
     if (!expenseChart) return;
     const isDark = document.body.classList.contains('dark-mode');
-    const textColor = isDark ? '#a1a1aa' : '#71717a';
-    const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-
-    expenseChart.options.scales.x.ticks.color = textColor;
-    expenseChart.options.scales.y.ticks.color = textColor;
-    expenseChart.options.scales.y.grid.color  = gridColor;
-    expenseChart.update();
+    
+    // Warnain lingkaran jadi abu-abu/hitam kalau transaksinya kosong (0 vs 0)
+    if (expenseChart.data.datasets[0].data.length === 1) {
+        const emptyColor = isDark ? '#27272a' : '#e4e4e7';
+        expenseChart.data.datasets[0].backgroundColor = [emptyColor];
+        expenseChart.update();
+    }
 }
 
 // =========================================
-// 6.2. MONTH FILTER
+// 6.2. MONTH FILTER & DONUT LOGIC
 // =========================================
 function populateMonthFilter() {
     const select = document.getElementById('month-filter');
@@ -242,25 +247,47 @@ function getSelectedMonth() {
 function renderChartForMonth(monthKey) {
     if (!expenseChart) return;
     const [year, month] = monthKey.split('-').map(Number);
-    const daysInMonth   = new Date(year, month, 0).getDate();
 
-    const incomeByDay  = Array(daysInMonth).fill(0);
-    const expenseByDay = Array(daysInMonth).fill(0);
+    currentMonthIncome = 0;
+    currentMonthExpense = 0;
 
+    // Kalkulasi Total Income & Expense bulan ini
     allTransactions.forEach(tx => {
         if (!tx.createdAt) return;
         const d = tx.createdAt.toDate();
         if (d.getFullYear() === year && d.getMonth() + 1 === month) {
-            const idx = d.getDate() - 1;
-            if (tx.type === 'income') incomeByDay[idx]  += Number(tx.amount);
-            else                       expenseByDay[idx] += Number(tx.amount);
+            if (tx.type === 'income') currentMonthIncome  += Number(tx.amount);
+            else                      currentMonthExpense += Number(tx.amount);
         }
     });
 
-    expenseChart.data.labels              = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    expenseChart.data.datasets[0].data    = incomeByDay;
-    expenseChart.data.datasets[1].data    = expenseByDay;
+    let incPct = 0;
+    let expPct = 0;
+    let totalFlow = currentMonthIncome + currentMonthExpense;
+    
+    // Update persentase dan warna chart
+    if (totalFlow > 0) {
+        incPct = Math.round((currentMonthIncome / totalFlow) * 100);
+        expPct = Math.round((currentMonthExpense / totalFlow) * 100);
+        
+        expenseChart.data.datasets[0].data = [currentMonthIncome, currentMonthExpense];
+        expenseChart.data.datasets[0].backgroundColor = ['#10b981', '#ef4444'];
+    } else {
+        // Kalau gaada transaksi, balikin ke warna netral
+        const isDark = document.body.classList.contains('dark-mode');
+        const emptyColor = isDark ? '#27272a' : '#e4e4e7';
+        expenseChart.data.datasets[0].data = [1];
+        expenseChart.data.datasets[0].backgroundColor = [emptyColor];
+    }
+    
     expenseChart.update();
+
+    // Update Text HTML
+    document.getElementById('stat-inc-pct').innerText = incPct + '%';
+    document.getElementById('stat-exp-pct').innerText = expPct + '%';
+    
+    // Panggil ulang biar format Rupiahnya ngikutin rules sensor mata
+    applyBalanceVisibility(); 
 }
 
 // =========================================
@@ -384,7 +411,7 @@ window.logout = function() {
 };
 
 // =========================================
-// 8. LOAD TRANSAKSI
+// 8. LOAD TRANSAKSI 
 // =========================================
 let knownTxIds      = new Set();
 let isInitialTxLoad = true;
@@ -402,7 +429,9 @@ function loadTransactions(uid) {
         .onSnapshot(snapshot => {
             list.innerHTML = '';
             allTransactions  = [];
-            let total        = 0;
+            
+            let totalCash = 0;
+            let totalPaylater = 0;
             currentDailyExpense  = 0;
             currentWeeklyExpense = 0;
 
@@ -428,11 +457,17 @@ function loadTransactions(uid) {
                 allTransactions.push(data);
 
                 const amount = Number(data.amount);
+                const method = data.method || 'cash'; 
 
-                if (data.type === 'income') {
-                    total += amount;
-                } else {
-                    total -= amount;
+                if (method === 'cash') {
+                    if (data.type === 'income') totalCash += amount;
+                    else totalCash -= amount;
+                } else if (method === 'paylater') {
+                    if (data.type === 'expense') totalPaylater += amount; 
+                    else totalPaylater -= amount; 
+                }
+
+                if (data.type === 'expense') {
                     if (data.createdAt) {
                         const txDate = data.createdAt.toDate();
                         if (txDate.getTime() >= today.getTime()) currentDailyExpense += amount;
@@ -449,10 +484,13 @@ function loadTransactions(uid) {
 
                 const li = document.createElement('li');
                 li.className = `expense-item ${isNewTx ? `flash-${data.type}` : ''}`;
+                
+                const methodLabel = method === 'paylater' ? `<span style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">Paylater</span>` : '';
+
                 li.innerHTML = `
                     <div class="expense-info">
                         <strong>${data.desc || (data.type === 'income' ? 'Income' : 'Expense')}</strong>
-                        <small>${dateStr}</small>
+                        <small>${dateStr} ${methodLabel}</small>
                     </div>
                     <div class="expense-actions">
                         <span class="expense-price ${data.type === 'income' ? 'text-success' : 'text-danger'}">
@@ -468,14 +506,16 @@ function loadTransactions(uid) {
             knownTxIds      = currentIds;
             isInitialTxLoad = false;
 
-            lastKnownBalance = total;
-            if (balanceEl) {
-                balanceEl.classList.toggle('balance-negative', total < 0);
-                balanceEl.classList.toggle('balance-positive', total > 0);
-            }
-            applyBalanceVisibility();
+            lastKnownCash = totalCash;
+            lastKnownPaylater = totalPaylater;
+            lastKnownNet = totalCash - totalPaylater; 
 
-            // Update chart
+            if (netEl) {
+                netEl.classList.toggle('balance-negative', lastKnownNet < 0);
+                netEl.classList.toggle('balance-positive', lastKnownNet > 0);
+            }
+
+            // Update UI dan Chart baru
             populateMonthFilter();
             renderChartForMonth(getSelectedMonth());
 
@@ -497,6 +537,7 @@ if (expenseForm) {
 
         const submitBtn = expenseForm.querySelector('button[type="submit"]');
         const type      = document.getElementById('type').value;
+        const method    = document.getElementById('method').value; 
         const desc      = document.getElementById('desc').value.trim();
         const amount    = document.getElementById('amount').value;
 
@@ -505,14 +546,22 @@ if (expenseForm) {
 
         db.collection('users').doc(user.uid).collection('transactions').add({
             type,
+            method, 
             desc,
             amount: Number(amount),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             expenseForm.reset();
+            
             typeBtns.forEach(b => b.classList.remove('active'));
-            document.querySelector('[data-type="expense"]').classList.add('active');
+            document.querySelector('.type-btn[data-type="expense"]').classList.add('active');
             typeInput.value = 'expense';
+
+            methodBtns.forEach(b => b.classList.remove('active'));
+            document.querySelector('.method-btn[data-method="cash"]').classList.add('active');
+            methodInput.value = 'cash';
+            if (methodGroup) methodGroup.style.display = 'block';
+
             goToSlide(0);
         }).catch(err => {
             alert('Gagal menambah data: ' + err.message);
@@ -557,15 +606,18 @@ document.getElementById('export-btn')?.addEventListener('click', () => {
         return;
     }
 
-    const header = ['Tanggal', 'Deskripsi', 'Tipe', 'Jumlah (Rp)'];
+    const header = ['Tanggal', 'Deskripsi', 'Tipe', 'Metode', 'Jumlah (Rp)'];
+    
     const rows   = filtered.map(tx => {
         const dateStr = tx.createdAt
             ? tx.createdAt.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
             : '-';
         const desc   = (tx.desc || (tx.type === 'income' ? 'Income' : 'Expense')).replace(/,/g, ' ');
         const type   = tx.type === 'income' ? 'Income' : 'Expense';
+        const methodLabel = tx.method === 'paylater' ? 'Paylater' : 'Cash/Bank';
         const amount = tx.type === 'income' ? tx.amount : -tx.amount;
-        return [dateStr, desc, type, amount];
+        
+        return [dateStr, desc, type, methodLabel, amount];
     });
 
     const csv  = [header, ...rows].map(r => r.join(',')).join('\n');
