@@ -48,7 +48,7 @@ if (themeToggleBtn) {
 }
 
 // =========================================
-// 4. INCOME/EXPENSE & METHOD TOGGLE
+// 4. INCOME/EXPENSE/PAY BILL & METHOD TOGGLE
 // =========================================
 const typeBtns    = document.querySelectorAll('.type-btn');
 const typeInput   = document.getElementById('type');
@@ -63,12 +63,9 @@ if (typeBtns && typeInput) {
             btn.classList.add('active');
             typeInput.value = btn.dataset.type;
 
-            if (btn.dataset.type === 'income') {
+            // Kalo pilih Income ATAU Pay Bill, method Paylater disembunyiin
+            if (btn.dataset.type === 'income' || btn.dataset.type === 'pay_bill') {
                 if (methodGroup) methodGroup.style.display = 'none'; 
-                methodBtns.forEach(b => b.classList.remove('active'));
-                const cashBtn = document.querySelector('.method-btn[data-method="cash"]');
-                if (cashBtn) cashBtn.classList.add('active');
-                if (methodInput) methodInput.value = 'cash';
             } else {
                 if (methodGroup) methodGroup.style.display = 'block'; 
             }
@@ -255,7 +252,8 @@ function renderChartForMonth(monthKey) {
         const d = tx.createdAt.toDate();
         if (d.getFullYear() === year && d.getMonth() + 1 === month) {
             if (tx.type === 'income') currentMonthIncome  += Number(tx.amount);
-            else                      currentMonthExpense += Number(tx.amount);
+            else if (tx.type === 'expense') currentMonthExpense += Number(tx.amount);
+            // Bayar tagihan (pay_bill) TIDAK dihitung di chart, biar gak ngaco laporannya
         }
     });
 
@@ -453,19 +451,26 @@ function loadTransactions(uid) {
                 const amount = Number(data.amount);
                 const method = data.method || 'cash'; 
 
-                if (method === 'cash') {
-                    if (data.type === 'income') totalCash += amount;
-                    else totalCash -= amount;
-                } else if (method === 'paylater') {
-                    if (data.type === 'expense') totalPaylater += amount; 
-                    else totalPaylater -= amount; 
-                }
+                // --- LOGIKA AKUNTANSI ---
+                if (data.type === 'pay_bill') {
+                    totalCash -= amount;       // Bayar pake duit cash
+                    totalPaylater -= amount;   // Utang berkurang
+                } else {
+                    if (method === 'cash') {
+                        if (data.type === 'income') totalCash += amount;
+                        else totalCash -= amount;
+                    } else if (method === 'paylater') {
+                        if (data.type === 'expense') totalPaylater += amount; 
+                        else totalPaylater -= amount; 
+                    }
 
-                if (data.type === 'expense') {
-                    if (data.createdAt) {
-                        const txDate = data.createdAt.toDate();
-                        if (txDate.getTime() >= today.getTime()) currentDailyExpense += amount;
-                        if (last7DaysDates.includes(getLocalYYYYMMDD(txDate))) currentWeeklyExpense += amount;
+                    // Pengeluaran harian cuma ngitung expense murni (bukan bayar utang)
+                    if (data.type === 'expense') {
+                        if (data.createdAt) {
+                            const txDate = data.createdAt.toDate();
+                            if (txDate.getTime() >= today.getTime()) currentDailyExpense += amount;
+                            if (last7DaysDates.includes(getLocalYYYYMMDD(txDate))) currentWeeklyExpense += amount;
+                        }
                     }
                 }
 
@@ -476,19 +481,33 @@ function loadTransactions(uid) {
                     });
                 }
 
+                // Desain Label Method di Kartu
+                let methodLabelHTML = '';
+                if (data.type === 'pay_bill') {
+                    methodLabelHTML = `<span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">Pay Bill</span>`;
+                } else if (method === 'paylater') {
+                    methodLabelHTML = `<span style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">Paylater</span>`;
+                }
+
                 const li = document.createElement('li');
-                li.className = `expense-item ${isNewTx ? `flash-${data.type}` : ''}`;
+                // animasi nyala kalo ada data baru
+                let animClass = '';
+                if (isNewTx) animClass = data.type === 'income' ? 'flash-income' : 'flash-expense';
+                li.className = `expense-item ${animClass}`;
                 
-                const methodLabel = method === 'paylater' ? `<span style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px;">Paylater</span>` : '';
+                // Set warna harga (Plus = ijo, Minus/PayBill = merah/standar)
+                let priceClass = data.type === 'income' ? 'text-success' : (data.type === 'pay_bill' ? '' : 'text-danger');
+                let sign = data.type === 'income' ? '+' : '-';
+                let defaultDesc = data.type === 'income' ? 'Income' : (data.type === 'pay_bill' ? 'Bayar Tagihan' : 'Expense');
 
                 li.innerHTML = `
                     <div class="expense-info">
-                        <strong>${data.desc || (data.type === 'income' ? 'Income' : 'Expense')}</strong>
-                        <small>${dateStr} ${methodLabel}</small>
+                        <strong>${data.desc || defaultDesc}</strong>
+                        <small>${dateStr} ${methodLabelHTML}</small>
                     </div>
                     <div class="expense-actions">
-                        <span class="expense-price ${data.type === 'income' ? 'text-success' : 'text-danger'}">
-                            ${data.type === 'income' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}
+                        <span class="expense-price ${priceClass}">
+                            ${sign} Rp ${amount.toLocaleString('id-ID')}
                         </span>
                         <button class="delete-btn" data-id="${doc.id}" title="Delete transaction">✕</button>
                     </div>
@@ -546,6 +565,7 @@ if (expenseForm) {
         }).then(() => {
             expenseForm.reset();
             
+            // Balik ke tampilan form awal (Expense + Cash)
             typeBtns.forEach(b => b.classList.remove('active'));
             document.querySelector('.type-btn[data-type="expense"]').classList.add('active');
             typeInput.value = 'expense';
@@ -605,12 +625,13 @@ document.getElementById('export-btn')?.addEventListener('click', () => {
         const dateStr = tx.createdAt
             ? tx.createdAt.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
             : '-';
-        const desc   = (tx.desc || (tx.type === 'income' ? 'Income' : 'Expense')).replace(/,/g, ' ');
-        const type   = tx.type === 'income' ? 'Income' : 'Expense';
-        const methodLabel = tx.method === 'paylater' ? 'Paylater' : 'Cash/Bank';
+            
+        const desc   = (tx.desc || (tx.type === 'income' ? 'Income' : (tx.type === 'pay_bill' ? 'Bayar Tagihan' : 'Expense'))).replace(/,/g, ' ');
+        const typeStr = tx.type === 'income' ? 'Income' : (tx.type === 'pay_bill' ? 'Pay Bill' : 'Expense');
+        const methodLabel = tx.type === 'pay_bill' ? 'Cash -> Paylater' : (tx.method === 'paylater' ? 'Paylater' : 'Cash/Bank');
         const amount = tx.type === 'income' ? tx.amount : -tx.amount;
         
-        return [dateStr, desc, type, methodLabel, amount];
+        return [dateStr, desc, typeStr, methodLabel, amount];
     });
 
     const csv  = [header, ...rows].map(r => r.join(',')).join('\n');

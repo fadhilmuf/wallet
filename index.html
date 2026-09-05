@@ -64,11 +64,14 @@
             <div class="carousel-item">
                 <div class="form-card" style="margin-bottom: 0;">
                     <form id="expense-form">
+                        
+                        <!-- TAMBAHAN TOMBOL PAY BILL -->
                         <div class="form-group">
                             <label>Transaction Type</label>
                             <div class="type-toggle">
                                 <button type="button" class="type-btn" data-type="income">Income</button>
                                 <button type="button" class="type-btn active" data-type="expense">Expense</button>
+                                <button type="button" class="type-btn" data-type="pay_bill">Pay Bill</button>
                             </div>
                             <input type="hidden" id="type" value="expense">
                         </div>
@@ -96,7 +99,7 @@
                 </div>
             </div>
 
-            <!-- SLIDE 2: DONUT CHART OVERVIEW (FLOATING TEXT) -->
+            <!-- SLIDE 2: DONUT CHART OVERVIEW -->
             <div class="carousel-item">
                 <div class="form-card" style="margin-bottom: 0; padding: 1.25rem 1rem; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;">
                     <div class="chart-header">
@@ -105,7 +108,7 @@
                     </div>
                     
                     <div class="overview-content">
-                        <!-- INCOME TEXT (KIRI ATAS) -->
+                        <!-- INCOME TEXT -->
                         <div class="stat-item income-stat">
                             <div class="stat-header">
                                 <span class="legend-dot" style="background: var(--success);"></span>
@@ -120,7 +123,7 @@
                             <canvas id="expenseChart"></canvas>
                         </div>
 
-                        <!-- EXPENSE TEXT (KANAN BAWAH) -->
+                        <!-- EXPENSE TEXT -->
                         <div class="stat-item expense-stat">
                             <div class="stat-header" style="flex-direction: row-reverse;">
                                 <span class="legend-dot" style="background: var(--danger);"></span>
